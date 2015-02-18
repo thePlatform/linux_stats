@@ -1,4 +1,4 @@
-require 'pl_os_stats'
+require 'pl_procstat'
 
 
 # run without specifying any processes to monitor

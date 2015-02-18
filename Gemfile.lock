@@ -1,0 +1,17 @@
+PATH
+  remote: .
+  specs:
+    pl_os_stats (0.1.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    rake (10.3.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bundler (~> 1.7)
+  pl_os_stats!
+  rake (~> 10.0)

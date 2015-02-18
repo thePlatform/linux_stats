@@ -1,7 +1,4 @@
-require 'pl_os_stats/version'
-require 'pl_os_stats/stats'
-require 'pl_os_stats/data/cpu_stat'
 
-module PlProcstat
-  # Your code goes here...
-end
+require 'pl_procstat/version'
+require 'pl_procstat/stats'
+require 'pl_procstat/data/cpu_stat'

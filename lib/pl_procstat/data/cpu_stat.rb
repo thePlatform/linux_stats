@@ -41,13 +41,14 @@ class CPUStat
 
   def report(prev=nil)
     report = {}
-    if prev
-      elapsed_jiffies = total_jiffies - prev.total_jiffies
-      report[:idle_pct] = 100.0*(idle-prev.idle)/elapsed_jiffies
-      report[:user_pct] = 100.0*(user-prev.user)/elapsed_jiffies
-    else
-      puts "Calculating from no prev TODO"
-    end
+    return report unless prev
+    # calculate avgs since the last snapshot
+    elapsed_jiffies = total_jiffies - prev.total_jiffies
+    report[:idle_pct] = 100.0*(idle-prev.idle)/elapsed_jiffies
+    report[:user_pct] = 100.0*(user-prev.user)/elapsed_jiffies
+    report[:system_pct] = 100.0*(system-prev.system)/elapsed_jiffies
+    report[:iowait_pct] = 100.0*(iowait-prev.iowait)/elapsed_jiffies
+    report[:softirq_pct] = 100.0*(softirq-prev.softirq)/elapsed_jiffies
     report
   end
 

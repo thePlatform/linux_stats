@@ -4,14 +4,14 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'pl_procstat/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "pl_procstat"
+  spec.name          = 'pl_procstat'
   spec.version       = PlProcstat::VERSION
-  spec.authors       = ["Travis Bear"]
-  spec.email         = ["travis.bear@theplatform.com"]
-  spec.summary       = %q{TODO: Write a short summary. Required.}
+  spec.authors       = ['Travis Bear']
+  spec.email         = ['travis.bear@theplatform.com']
+  spec.summary       = 'Lightweight OS stats extracted from /proc'
   spec.description   = %q{TODO: Write a longer description. Optional.}
-  spec.homepage      = ""
-  spec.license       = "MIT"
+  spec.homepage      = ''
+  spec.license       = 'thePlatform'
 
   spec.files         = `git ls-files -z`.split("\x0")
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }

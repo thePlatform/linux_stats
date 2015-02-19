@@ -68,15 +68,15 @@ class LinuxOSStats
 
   def report
     report_start_time = Time.now
-    puts "Total elapsed seconds: #{Time.now - start_time}"
-    puts "Seconds since last call: #{Time.now - last_called_time}"
+    #puts "Total elapsed seconds: #{Time.now - start_time}"
+    #puts "Seconds since last call: #{Time.now - last_called_time}"
     proc_names.each do |proc_name|
       puts "Proc: #{proc_name}"
       pids(proc_name).each do |pid|
         puts "  - #{pid}"
       end
     end
-    pp cpu_summary
+    #pp cpu_summary
     @last_called_time = Time.now
     puts "CPU report took #{Time.now-report_start_time} seconds."
   end
@@ -107,7 +107,6 @@ class LinuxOSStats
       end
     end
     elapsed_time = Time.now - last_called_time
-    puts "ctx: #{total_context_switches}, interr: #{total_interrupts}, elapsed: #{elapsed_time}"
     # generate report by comparing current data to prev data
     if last_cpu_data
       cpu_data.keys.each do |cpu_name|

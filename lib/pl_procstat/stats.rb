@@ -76,7 +76,7 @@ class LinuxOSStats
         puts "  - #{pid}"
       end
     end
-    #pp cpu_summary
+    cpu_summary
     @last_called_time = Time.now
     puts "CPU report took #{Time.now-report_start_time} seconds."
   end
@@ -142,6 +142,7 @@ class LinuxOSStats
   end
 
   def memory
+    # /proc/meminfo (?)
     # ram
     # swap
   end

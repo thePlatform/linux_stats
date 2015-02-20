@@ -1,8 +1,12 @@
 #!/usr/bin/env ruby
 
 require 'pl_procstat'
+require 'pp'
+require 'time'
 
-# run without specifying any processes to monitor
+# This executable may serve as a useful command-line tool,
+# but its primary purpose is to provide an example client
+# for the stats library.
 
 delay_sec = ARGV[0].to_i
 iterations = ARGV[1].to_i
@@ -11,5 +15,9 @@ stats = LinuxOSStats.new
 stats.report
 iterations.times do
   sleep(delay_sec)
-  stats.report
+  start = Time.now
+  report = stats.report
+  elapsed_time = Time.now - start
+  pp report
+  puts "Generating the report took #{elapsed_time} seconds"
 end

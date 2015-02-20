@@ -2,6 +2,7 @@ require 'time'
 require 'pp'
 
 CPU_DATA_FILE = '/proc/stat'
+NET_BANDWIDTH_DATA_FILE = '/proc/net/dev'
 INITIAL_SLEEP_SECONDS = 1
 PID_INDEX = 2
 
@@ -17,7 +18,8 @@ class LinuxOSStats
   #
   #
   # Goals:
-  #   * be as fast and lightweight
+  #   * be as fast and lightweight as possible
+  #   * gather all data in 1ms or less
   #   * no shelling out to existing system tools (sar, vmstat, etc.) since we
   #     don't want the expense of creating a new process.
   #   * provide useful statistics in the form of a sensible hash that clients 
@@ -43,19 +45,18 @@ class LinuxOSStats
 
   attr_reader :last_called_time,
               :last_cpu_data,
+              :last_net_data,
               :last_procstat_data,
               :proc_names,
               :start_time
 
-  def initialize(proc_names=[])
+  def initialize
     @proc_names = proc_names
     @start_time = Time.now
     @last_called_time = start_time
     @last_cpu_data = nil
+    @last_net_data = nil
     @last_procstat_data = nil
-    proc_names.each do |proc_name|
-      puts "Monitoring #{proc_name}"
-    end
   end
 
   def pids(cmd)
@@ -67,18 +68,13 @@ class LinuxOSStats
   end
 
   def report
-    report_start_time = Time.now
     #puts "Total elapsed seconds: #{Time.now - start_time}"
     #puts "Seconds since last call: #{Time.now - last_called_time}"
-    proc_names.each do |proc_name|
-      puts "Proc: #{proc_name}"
-      pids(proc_name).each do |pid|
-        puts "  - #{pid}"
-      end
-    end
-    cpu_summary
+    os_perf_stats = {}
+    os_perf_stats[:cpu] = cpu_summary
+    os_perf_stats[:net] = net
     @last_called_time = Time.now
-    puts "CPU report took #{Time.now-report_start_time} seconds."
+    os_perf_stats
   end
 
 
@@ -89,8 +85,6 @@ class LinuxOSStats
     cpu_report = {}
     cpu_data = {}
     procstat_data = {}
-    total_interrupts = 0
-    total_context_switches = 0
     # get current data
     IO.readlines(CPU_DATA_FILE).each do |line|
       if line =~ /^cpu/
@@ -100,10 +94,10 @@ class LinuxOSStats
       procstat_data[:interrupts] = line.split()[1].to_i if line =~ /^intr/
       procstat_data[:context_switches]= line.split()[1].to_i if line =~/^ctxt/
       if line =~/^procs_running/
-        cpu_report['procs_running'] = line.split()[1].to_i
+        cpu_report[:procs_running] = line.split()[1].to_i
       end
       if line =~/^procs_blocked/
-        cpu_report['procs_blocked'] = line.split()[1].to_i
+        cpu_report[:procs_blocked] = line.split()[1].to_i
       end
     end
     elapsed_time = Time.now - last_called_time
@@ -112,9 +106,9 @@ class LinuxOSStats
       cpu_data.keys.each do |cpu_name|
         cpu_report[cpu_name] = cpu_data[cpu_name].report(last_cpu_data[cpu_name])
       end
-      cpu_report['interrupts/sec'] =
+      cpu_report[:interrupts_persec] =
           (procstat_data[:interrupts] - last_procstat_data[:interrupts])/ elapsed_time
-      cpu_report['ctxt_switches/sec'] =
+      cpu_report[:ctxt_switches_persec] =
           (procstat_data[:context_switches]-last_procstat_data[:context_switches]) / elapsed_time
 
     end
@@ -123,6 +117,40 @@ class LinuxOSStats
     @last_procstat_data = procstat_data
     cpu_report
   end
+
+  def net
+    net_data = {}
+    net_report = {}
+    IO.readlines(NET_BANDWIDTH_DATA_FILE).each do |line|
+      if line =~ /^ *eth/
+        net_stat = NetStat.new(line)
+        net_data[net_stat.interface] = net_stat
+      end
+    end
+    elapsed_time = Time.now - last_called_time
+    if last_net_data
+      net_data.keys.each do |interface|
+        net_report[interface] = {}
+        net_report[interface][:tx_bytes_persec] =
+            (net_data[interface].bytes_tx - last_net_data[interface].bytes_tx)/ elapsed_time
+        net_report[interface][:rx_bytes_persec] =
+            (net_data[interface].bytes_rx-last_net_data[interface].bytes_rx)/elapsed_time
+      end
+      IO.readlines('/proc/net/sockstat').each do |line|
+        if line =~ /^TCP/
+          words = line.split()
+          net_report[:tcp_open_conn] = words[2].to_i
+          net_report[:tcp_timewait_conn] = words[6].to_i
+        end
+      end
+    end
+    @last_net_data = net_data
+    net_report
+
+    #TODO: open connection counts from /proc/net/sockstat
+
+  end
+
 
   def disk_io
     # iops
@@ -135,11 +163,6 @@ class LinuxOSStats
     # capacity %
   end
 
-  def net
-    # bandwidth bytes
-    # % capacity
-    # number of open connections
-  end
 
   def memory
     # /proc/meminfo (?)
@@ -151,10 +174,6 @@ class LinuxOSStats
     # 1
     # 5
     # 15
-  end
-
-  def procs
-    # number of running processes
   end
 
   def open_files

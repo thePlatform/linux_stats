@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Travis Bear']
   spec.email         = ['travis.bear@theplatform.com']
   spec.summary       = 'Lightweight OS stats extracted from /proc'
-  spec.description   = %q{TODO: Write a longer description. Optional.}
+  spec.description   = 'Inspects the state of the system, reports stats'
   spec.homepage      = ''
   spec.license       = 'thePlatform'
 

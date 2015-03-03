@@ -1,8 +1,16 @@
 class NetStat
 
+  # reads info from /proc/net/dev
+
+  COL_IFACE = 0
+  COL_BYTES_RX = 1
+
   attr_reader :bytes_tx,
               :bytes_rx,
+              :errors_rx,
+              :errors_tx,
               :interface
+
 
 
   def initialize(stat_line)
@@ -13,11 +21,10 @@ class NetStat
 # lo: 2099579347 30635436    0    0    0     0          0         0 2099579347 30635436    0    0    0     0       0          0
 
     words = stat_line.split
-    @interface = words[0]
-    @bytes_rx = words[1].to_i
+    @interface = words[COL_IFACE]
+    @bytes_rx = words[COL_BYTES_RX].to_i
+    @errors_rx = words[3].to_i
     @bytes_tx = words[9].to_i
-
-    # TODO: gather metrics on tx/rx errors
-    #puts("#{interface} bytes_rx: #{bytes_rx}, tx: #{bytes_tx}")
+    @errors_tx = words[11].to_i
   end
 end

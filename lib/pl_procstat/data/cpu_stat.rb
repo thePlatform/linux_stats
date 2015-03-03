@@ -1,5 +1,8 @@
 class CPUStat
 
+  # ingests a line from /proc/stat into a data structure of CPU
+  # usage values
+
   attr_reader :user,
               :nice,
               :system,
@@ -10,8 +13,6 @@ class CPUStat
               :name,
               :total_jiffies
 
-  # ingests a line from /proc/stat into a data structure of CPU
-  # usage values
   def initialize(stat_line)
 
     # The meanings of the columns are as follows, from left to right:

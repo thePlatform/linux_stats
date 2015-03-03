@@ -19,7 +19,7 @@ class LinuxOSStats
   #
   # Goals:
   #   * be as fast and lightweight as possible
-  #   * gather all data in 1ms or less
+  #   * gather all data in 2ms or less
   #   * no shelling out to existing system tools (sar, vmstat, etc.) since we
   #     don't want the expense of creating a new process.
   #   * provide useful statistics in the form of a sensible hash that clients 
@@ -135,6 +135,10 @@ class LinuxOSStats
             (net_data[interface].bytes_tx - last_net_data[interface].bytes_tx)/ elapsed_time
         net_report[interface][:rx_bytes_persec] =
             (net_data[interface].bytes_rx-last_net_data[interface].bytes_rx)/elapsed_time
+        net_report[interface][:errors_rx_persec] =
+            (net_data[interface].errors_rx-last_net_data[interface].errors_rx)/elapsed_time
+        net_report[interface][:errors_tx_persec] =
+            (net_data[interface].errors_tx-last_net_data[interface].errors_tx)/elapsed_time
       end
       IO.readlines('/proc/net/sockstat').each do |line|
         if line =~ /^TCP/

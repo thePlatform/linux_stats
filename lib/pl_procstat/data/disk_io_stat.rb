@@ -1,5 +1,5 @@
 class DiskIOStat
-  
+
   # The /proc/diskstats file displays the I/O statistics
   # of block devices. Each line contains the following 14
   # fields:

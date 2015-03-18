@@ -8,8 +8,8 @@ require 'pl_procstat'
 # but its primary purpose is to provide an example client
 # for the stats library.
 
-DEFAULT_DELAY_SEC = 3
-DEFAULT_ITERATIONS = 0
+DEFAULT_DELAY_SEC = 2
+DEFAULT_ITERATIONS = 3
 
 delay_sec = ARGV[0] ? ARGV[0].to_i : DEFAULT_DELAY_SEC
 iterations = ARGV[1] ? ARGV[1].to_i : DEFAULT_ITERATIONS
@@ -24,18 +24,3 @@ iterations.times do
   pp report
   puts "Generating the report took #{elapsed_time} seconds"
 end
-
-# https://www.ruby-forum.com/topic/4416522
-# get the individual partitions from /proc/mounts
-def partition_occupation(fn)
-  b=' '*128
-  syscall(137,fn,b)
-  a=b.unpack('QQQQQ')
-  puts "a2: #{a[2]*4}, a4: #{a[4]*4}"
-  (a[2]-a[4]).to_f/a[2]
-end
-
-start = Time.now
-info = partition_occupation('/')
-elapsed = Time.now - start
-puts "Info: #{info}, time: #{elapsed}"

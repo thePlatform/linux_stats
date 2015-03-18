@@ -4,6 +4,11 @@ require 'pp'
 CPU_DATA_FILE = '/proc/stat'
 NET_BANDWIDTH_DATA_FILE = '/proc/net/dev'
 INITIAL_SLEEP_SECONDS = 1
+IGNORE_PARTITIONS = [
+    '^\/proc',
+    '^\/sys',
+    'docker'
+]
 PID_INDEX = 2
 
 
@@ -43,20 +48,25 @@ class LinuxOSStats
   #
   #
 
-  attr_reader :last_called_time,
+  attr_reader :blocks_per_kilobyte,
+              :last_called_time,
               :last_cpu_data,
               :last_net_data,
               :last_procstat_data,
+              :mounted_partitions,
               :proc_names,
               :start_time
 
   def initialize
+    @blocks_per_kilobyte = 4 # TODO: calculate from info in /proc?
     @proc_names = proc_names
     @start_time = Time.now
     @last_called_time = start_time
     @last_cpu_data = nil
     @last_net_data = nil
     @last_procstat_data = nil
+    @mounted_partitions = mounts
+    puts "Allowed mounts: #{mounts}"
   end
 
   def pids(cmd)
@@ -73,6 +83,7 @@ class LinuxOSStats
     os_perf_stats = {}
     os_perf_stats[:cpu] = cpu_summary
     os_perf_stats[:net] = net
+    os_perf_stats[:partition_use] = disk_storage
     @last_called_time = Time.now
     os_perf_stats
   end
@@ -163,25 +174,56 @@ class LinuxOSStats
   end
 
   def disk_storage
-    # bytes
-    # capacity %
+    storage_report = {}
+    mounted_partitions.each do |partition|
+      usage = partition_used(partition)
+      storage_report[partition] = {}
+      storage_report[partition][:used] = usage[0]
+      storage_report[partition][:total] = usage[1]
+    end
+    storage_report
   end
 
-
   def memory
+    # TODO
     # /proc/meminfo (?)
     # ram
     # swap
   end
 
   def load_avg
+    # TODO
     # 1
     # 5
     # 15
   end
 
   def open_files
-    # number of open files
+    # number of open files TODO
   end
 
+  # see https://www.ruby-forum.com/topic/4416522
+  # returns: array of partition use: [
+  #   <used kilobytes>
+  #   <max kilobytes>
+  # ]
+  def partition_used(partition)
+    b=' '*128
+    syscall(137, partition, b)
+    a=b.unpack('QQQQQ')
+    [a[2]*blocks_per_kilobyte, a[4]*blocks_per_kilobyte]
+  end
+
+  def mounts
+    mount_list = []
+    IO.readlines('/proc/mounts').each do |line|
+      mount = line.split[1]
+      next if IGNORE_PARTITIONS.include? mount
+      mount_list.push line.split[1].strip
+    end
+    IGNORE_PARTITIONS.each do |partition|
+      mount_list.reject! { |x| x =~ /#{partition}/ }
+    end
+    mount_list
+  end
 end

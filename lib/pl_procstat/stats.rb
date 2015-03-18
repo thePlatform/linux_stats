@@ -104,6 +104,7 @@ class LinuxOSStats
 
 
   def cpu_summary
+    # execution time: 0.6 ms  [MED]
     cpu_report = {}
     cpu_data = {}
     procstat_data = {}
@@ -141,6 +142,7 @@ class LinuxOSStats
   end
 
   def net
+    # execution time: 1.1 ms.  [HIGH]
     net_data = {}
     net_report = {}
     IO.readlines(NET_BANDWIDTH_DATA_FILE).each do |line|
@@ -182,6 +184,7 @@ class LinuxOSStats
   end
 
   def disk_storage
+    # execution time: 0.3 ms  [LOW]
     storage_report = {}
     mounted_partitions.each do |partition|
       usage = partition_used(partition)
@@ -193,28 +196,40 @@ class LinuxOSStats
   end
 
   def memory
+    # execution time: 2.4 ms  [VERY HIGH]
+    #
     # There is a bunch more stuff available in /proc/meminfo than we're using
-    # here, so we have the option to pull in many additional metrics.
+    # here, so we have the option to pull in many additional metrics.  This is
+    # a relatively expensive call, it more than doubles the execution time of
+    # of an entire stats gathering iteration.  (possibly because /proc/meminfo
+    # is a large file)
+    #
+    # TODO: investigate using syscall to get this more cheaply
     mem_report = {}
     IO.readlines(MEMORY_DATA_FILE).each do |line|
       if line =~ /^#{MEM_TOTAL}/
-        puts line.split[1], line.split[1].to_i
-        #mem_report[:mem_total] = line.split()[1].to_i
+        #puts line.split[1], line.split[1].to_i
+        mem_report[:mem_total] = line.split()[1].to_i
+        next
       end
       if line =~ /^#{MEM_FREE}/
-        #mem_report[:mem_free] = line.split()[1].to_i
+        mem_report[:mem_free] = line.split()[1].to_i
+        next
       end
       if line =~ /^#{SWAP_TOTAL}/
-        #mem_report[:swap_total] = line.split()[1].to_i
+        mem_report[:swap_total] = line.split()[1].to_i
+        next
       end
       if line =~ /^#{SWAP_FREE}/
-        #mem_report[:swap_free] = line.split()[1].to_i
+        mem_report[:swap_free] = line.split()[1].to_i
+        next
       end
-      mem_report
     end
+    mem_report
   end
 
   def load_avg
+    # execution time: 0.12 ms  [LOW]
     load_report = {}
     data = File.read(LOAD_AVG_DATA_FILE).split
     load_report[:one] = data[0].to_f
@@ -223,10 +238,18 @@ class LinuxOSStats
     load_report
   end
 
+  # for description of file-nr info, see
+  # https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/5/html/Tuning_and_Optimizing_Red_Hat_Enterprise_Linux_for_Oracle_9i_and_10g_Databases/chap-Oracle_9i_and_10g_Tuning_Guide-Setting_File_Handles.html
   def open_files
+    # execution time: 0.1 ms  [LOW]
     file_descriptors = {}
     data = File.read(FILE_DESCRIPTOR_DATA_FILE).split
-    file_descriptors[:used] = data[0].to_i
+    allocated = data[0].to_i
+    available = data[1].to_i
+    # for kernels 2.4 and below, 'used' is just data[0].  We could detect kernel version
+    # from /proc/version and handle old versions, but Centos 5 and 6 all have kernels
+    # 2.6 and above
+    file_descriptors[:used] = allocated - available
     file_descriptors[:max] = data[2].to_i
     file_descriptors
   end

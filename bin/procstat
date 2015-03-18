@@ -9,7 +9,7 @@ require 'pl_procstat'
 # for the stats library.
 
 DEFAULT_DELAY_SEC = 2
-DEFAULT_ITERATIONS = 3
+DEFAULT_ITERATIONS = 4
 
 delay_sec = ARGV[0] ? ARGV[0].to_i : DEFAULT_DELAY_SEC
 iterations = ARGV[1] ? ARGV[1].to_i : DEFAULT_ITERATIONS

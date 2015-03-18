@@ -2,14 +2,23 @@ require 'time'
 require 'pp'
 
 CPU_DATA_FILE = '/proc/stat'
-NET_BANDWIDTH_DATA_FILE = '/proc/net/dev'
+FILE_DESCRIPTOR_DATA_FILE = '/proc/sys/fs/file-nr'
 INITIAL_SLEEP_SECONDS = 1
 IGNORE_PARTITIONS = [
     '^\/proc',
     '^\/sys',
     'docker'
 ]
+LOAD_AVG_DATA_FILE = '/proc/loadavg'
+MEM_TOTAL = 'MemTotal'
+MEM_FREE = 'MemFree'
+MEMORY_DATA_FILE = '/proc/meminfo'
+MOUNTS_DATA_FILE = '/proc/mounts'
+NET_BANDWIDTH_DATA_FILE = '/proc/net/dev'
+NET_SOCKETS_DATA_FILE = '/proc/net/sockstat'
 PID_INDEX = 2
+SWAP_TOTAL = 'SwapTotal'
+SWAP_FREE = 'SwapFree'
 
 
 class LinuxOSStats
@@ -58,7 +67,7 @@ class LinuxOSStats
               :start_time
 
   def initialize
-    @blocks_per_kilobyte = 4 # TODO: calculate from info in /proc?
+    @blocks_per_kilobyte = 4 # TODO: calculate from info in /proc?  Where?
     @proc_names = proc_names
     @start_time = Time.now
     @last_called_time = start_time
@@ -66,7 +75,6 @@ class LinuxOSStats
     @last_net_data = nil
     @last_procstat_data = nil
     @mounted_partitions = mounts
-    puts "Allowed mounts: #{mounts}"
   end
 
   def pids(cmd)
@@ -84,6 +92,9 @@ class LinuxOSStats
     os_perf_stats[:cpu] = cpu_summary
     os_perf_stats[:net] = net
     os_perf_stats[:partition_use] = disk_storage
+    os_perf_stats[:load_avg] = load_avg
+    os_perf_stats[:file_descriptor] = open_files
+    os_perf_stats[:memory] = memory
     @last_called_time = Time.now
     os_perf_stats
   end
@@ -151,7 +162,7 @@ class LinuxOSStats
         net_report[interface][:errors_tx_persec] =
             (net_data[interface].errors_tx-last_net_data[interface].errors_tx)/elapsed_time
       end
-      IO.readlines('/proc/net/sockstat').each do |line|
+      IO.readlines(NET_SOCKETS_DATA_FILE).each do |line|
         if line =~ /^TCP/
           words = line.split()
           net_report[:tcp_open_conn] = words[2].to_i
@@ -161,9 +172,6 @@ class LinuxOSStats
     end
     @last_net_data = net_data
     net_report
-
-    #TODO: open connection counts from /proc/net/sockstat
-
   end
 
 
@@ -185,21 +193,42 @@ class LinuxOSStats
   end
 
   def memory
-    # TODO
-    # /proc/meminfo (?)
-    # ram
-    # swap
+    # There is a bunch more stuff available in /proc/meminfo than we're using
+    # here, so we have the option to pull in many additional metrics.
+    mem_report = {}
+    IO.readlines(MEMORY_DATA_FILE).each do |line|
+      if line =~ /^#{MEM_TOTAL}/
+        puts line.split[1], line.split[1].to_i
+        #mem_report[:mem_total] = line.split()[1].to_i
+      end
+      if line =~ /^#{MEM_FREE}/
+        #mem_report[:mem_free] = line.split()[1].to_i
+      end
+      if line =~ /^#{SWAP_TOTAL}/
+        #mem_report[:swap_total] = line.split()[1].to_i
+      end
+      if line =~ /^#{SWAP_FREE}/
+        #mem_report[:swap_free] = line.split()[1].to_i
+      end
+      mem_report
+    end
   end
 
   def load_avg
-    # TODO
-    # 1
-    # 5
-    # 15
+    load_report = {}
+    data = File.read(LOAD_AVG_DATA_FILE).split
+    load_report[:one] = data[0].to_f
+    load_report[:five] = data[1].to_f
+    load_report[:fifteen] = data[2].to_f
+    load_report
   end
 
   def open_files
-    # number of open files TODO
+    file_descriptors = {}
+    data = File.read(FILE_DESCRIPTOR_DATA_FILE).split
+    file_descriptors[:used] = data[0].to_i
+    file_descriptors[:max] = data[2].to_i
+    file_descriptors
   end
 
   # see https://www.ruby-forum.com/topic/4416522
@@ -207,6 +236,7 @@ class LinuxOSStats
   #   <used kilobytes>
   #   <max kilobytes>
   # ]
+  # Calls to statvfs may be useful too
   def partition_used(partition)
     b=' '*128
     syscall(137, partition, b)
@@ -216,7 +246,7 @@ class LinuxOSStats
 
   def mounts
     mount_list = []
-    IO.readlines('/proc/mounts').each do |line|
+    IO.readlines(MOUNTS_DATA_FILE).each do |line|
       mount = line.split[1]
       next if IGNORE_PARTITIONS.include? mount
       mount_list.push line.split[1].strip

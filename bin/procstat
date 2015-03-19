@@ -8,8 +8,8 @@ require 'json'
 # but its primary purpose is to provide an example client
 # for the stats library.
 
-DEFAULT_DELAY_SEC = 2
-DEFAULT_ITERATIONS = 10
+DEFAULT_DELAY_SEC = 1
+DEFAULT_ITERATIONS = 2
 
 delay_sec = ARGV[0] ? ARGV[0].to_i : DEFAULT_DELAY_SEC
 iterations = ARGV[1] ? ARGV[1].to_i : DEFAULT_ITERATIONS

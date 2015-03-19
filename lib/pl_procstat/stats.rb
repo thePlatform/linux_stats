@@ -127,7 +127,7 @@ class LinuxOSStats
     # get current data
     IO.readlines(CPU_DATA_FILE).each do |line|
       if line =~ /^cpu/
-        cpu_stat = CPUStat.new line
+        cpu_stat = CPU::Stats.new line
         cpu_data[cpu_stat.name] = cpu_stat
       end
       procstat_data[:interrupts] = line.split()[1].to_i if line =~ /^intr/
@@ -163,7 +163,7 @@ class LinuxOSStats
     net_report = {}
     IO.readlines(NET_BANDWIDTH_DATA_FILE).each do |line|
       if line =~ /^ *eth/
-        net_stat = NetStat.new(line)
+        net_stat = Net::Stats.new(line)
         net_data[net_stat.interface] = net_stat
       end
     end
@@ -199,13 +199,13 @@ class LinuxOSStats
     disk_stats = {}
     elapsed_time = Time.now - last_called_time
     watched_disks.each do |disk_name|
-      stats = BlockIOStat.new("/sys/block/#{disk_name}/stat", bytes_per_disk_sector)
+      data = File.read("/sys/block/#{disk_name}/stat")
+      stats = BlockIO::Stats.new(data, bytes_per_disk_sector)
       disk_stats[disk_name] = stats
       disk_report = {}
       disk_report[:in_progress] = stats.in_progress
-      #puts "#{Time.now} LDS: #{@last_disk_stats}"
-      if @last_disk_stats_2
-        last = @last_disk_stats_2[disk_name]
+      if @last_disk_stats
+        last = @last_disk_stats[disk_name]
         disk_report[:reads_persec] = (stats.reads - last.reads) / elapsed_time
         disk_report[:writes_persec] = (stats.writes - last.writes) / elapsed_time
         disk_report[:bytes_read_persec] = (stats.read_bytes - last.read_bytes) / elapsed_time
@@ -219,7 +219,7 @@ class LinuxOSStats
       end
       all_disk_report[disk_name] = disk_report
     end
-    @last_disk_stats_2 = disk_stats
+    @last_disk_stats = disk_stats
     all_disk_report
   end
 
@@ -300,6 +300,10 @@ class LinuxOSStats
     file_descriptors
   end
 
+
+  ## below here are util functions which we can factor out into a new module
+
+
   # see https://www.ruby-forum.com/topic/4416522
   # returns: array of partition use: [
   #   <used kilobytes>
@@ -338,7 +342,12 @@ class LinuxOSStats
   end
 
   def sector_size
-    File.read(SECTOR_SIZE_DATA_FILE).strip().to_i
+    begin
+      return File.read(SECTOR_SIZE_DATA_FILE).strip().to_i
+    rescue
+      # handle CentOS 5
+      return 512
+    end
   end
 
   def cpuinfo

@@ -2,6 +2,7 @@ require 'time'
 require 'pp'
 
 CPU_DATA_FILE = '/proc/stat'
+CPUINFO_DATA_FILE = '/proc/cpuinfo'
 DISK_STATS_DATA_FILE = '/proc/diskstats'
 FILE_DESCRIPTOR_DATA_FILE = '/proc/sys/fs/file-nr'
 INITIAL_SLEEP_SECONDS = 1
@@ -25,7 +26,9 @@ NET_BANDWIDTH_DATA_FILE = '/proc/net/dev'
 NET_SOCKETS_DATA_FILE = '/proc/net/sockstat'
 PAGE_CACHE = 'Cached'
 PID_INDEX = 2
-SECTOR_SIZE_DATA_FILE = '/sys/block/sdb/queue/hw_sector_size'
+# FIXME: this should be set on a per-device basis with a map of
+#        device name to sector data size
+SECTOR_SIZE_DATA_FILE = '/sys/block/sda/queue/hw_sector_size'
 SWAP_TOTAL = 'SwapTotal'
 SWAP_FREE = 'SwapFree'
 
@@ -35,10 +38,6 @@ class LinuxOSStats
   #
   # sys-proctable may provide the functionality we need, or some of it.
   # check out  https://github.com/djberg96/sys-proctable
-  #
-  # Proof of concept for gathering useful OS-level statistics from the /proc
-  # filesystem.
-  #
   #
   # Goals:
   #   * be as fast and lightweight as possible
@@ -90,7 +89,7 @@ class LinuxOSStats
     @mounted_partitions = mounts
     @proc_names = proc_names
     @watched_disks = disks
-    @num_cpu = 8
+    @num_cpu = cpuinfo
   end
 
   def pids(cmd)
@@ -209,8 +208,8 @@ class LinuxOSStats
         disk_report[:writes_persec] = (stats.writes - last.writes) / elapsed_time
         disk_report[:bytes_read_persec] = (stats.read_bytes - last.read_bytes) / elapsed_time
         disk_report[:bytes_written_persec] = (stats.write_bytes - last.write_bytes) / elapsed_time
-        cpums = elapsed_time * num_cpu * 1.25
-        pct_active = (stats.active_time_ms - last.active_time_ms) / cpums
+        cpu_ms = elapsed_time * num_cpu * 1.25
+        pct_active = (stats.active_time_ms - last.active_time_ms) / cpu_ms
         # pct_active is an approximation, which may occasionally be a bit over 100%.  We
         # cap it here at 100 to avoid confusion
         pct_active = 100 if pct_active > 100
@@ -229,8 +228,8 @@ class LinuxOSStats
     mounted_partitions.each do |partition|
       usage = partition_used(partition)
       storage_report[partition] = {}
-      storage_report[partition][:total] = usage[0]
-      storage_report[partition][:available] = usage[1]
+      storage_report[partition][:total_kb] = usage[0]
+      storage_report[partition][:available_kb] = usage[1]
     end
     storage_report
   end
@@ -338,5 +337,13 @@ class LinuxOSStats
 
   def sector_size
     File.read(SECTOR_SIZE_DATA_FILE).strip().to_i
+  end
+
+  def cpuinfo
+    ret = 0
+    IO.readlines(CPUINFO_DATA_FILE).each do |line|
+      ret += 1 if line =~ /^processor/
+    end
+    ret
   end
 end

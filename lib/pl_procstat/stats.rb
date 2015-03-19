@@ -7,6 +7,8 @@ DISK_STATS_DATA_FILE = '/proc/diskstats'
 FILE_DESCRIPTOR_DATA_FILE = '/proc/sys/fs/file-nr'
 INITIAL_SLEEP_SECONDS = 1
 IGNORE_DISKS = [
+    '^dm-[0-9]',
+    '^fd[0-9]',
     '^ram',
     '^loop',
     '^sr',

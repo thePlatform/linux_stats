@@ -102,16 +102,14 @@ class LinuxOSStats
   end
 
   def report
-    #puts "Total elapsed seconds: #{Time.now - start_time}"
-    #puts "Seconds since last call: #{Time.now - last_called_time}"
     os_perf_stats = {}
-    #os_perf_stats[:cpu] = cpu_summary
-    #os_perf_stats[:net] = net
-    #os_perf_stats[:partition_use] = disk_storage
-    #os_perf_stats[:load_avg] = load_avg
-    #os_perf_stats[:file_descriptor] = open_files
-    #os_perf_stats[:memory] = memory
-    os_perf_stats[:disk_io_blockstats] = disk_io_blockstats
+    os_perf_stats[:cpu] = cpu_summary
+    os_perf_stats[:net] = net
+    os_perf_stats[:partition_use] = disk_storage
+    os_perf_stats[:load_avg] = load_avg
+    os_perf_stats[:file_descriptor] = open_files
+    os_perf_stats[:memory] = memory
+    os_perf_stats[:disk_io] = disk_io_blockstats
     @last_called_time = Time.now
     os_perf_stats
   end
@@ -231,8 +229,8 @@ class LinuxOSStats
     mounted_partitions.each do |partition|
       usage = partition_used(partition)
       storage_report[partition] = {}
-      storage_report[partition][:used] = usage[0]
-      storage_report[partition][:total] = usage[1]
+      storage_report[partition][:total] = usage[0]
+      storage_report[partition][:available] = usage[1]
     end
     storage_report
   end

@@ -2,8 +2,15 @@ require 'time'
 require 'pp'
 
 CPU_DATA_FILE = '/proc/stat'
+DISK_STATS_DATA_FILE = '/proc/diskstats'
 FILE_DESCRIPTOR_DATA_FILE = '/proc/sys/fs/file-nr'
 INITIAL_SLEEP_SECONDS = 1
+IGNORE_DISKS = [
+    '^ram',
+    '^loop',
+    '^sr',
+    '^sd.*[0-9]'
+]
 IGNORE_PARTITIONS = [
     '^\/proc',
     '^\/sys',
@@ -16,7 +23,9 @@ MEMORY_DATA_FILE = '/proc/meminfo'
 MOUNTS_DATA_FILE = '/proc/mounts'
 NET_BANDWIDTH_DATA_FILE = '/proc/net/dev'
 NET_SOCKETS_DATA_FILE = '/proc/net/sockstat'
+PAGE_CACHE = 'Cached'
 PID_INDEX = 2
+SECTOR_SIZE_DATA_FILE = '/sys/block/sdb/queue/hw_sector_size'
 SWAP_TOTAL = 'SwapTotal'
 SWAP_FREE = 'SwapFree'
 
@@ -58,23 +67,30 @@ class LinuxOSStats
   #
 
   attr_reader :blocks_per_kilobyte,
+              :bytes_per_disk_sector,
               :last_called_time,
               :last_cpu_data,
               :last_net_data,
               :last_procstat_data,
               :mounted_partitions,
+              :num_cpu,
               :proc_names,
-              :start_time
+              :start_time,
+              :watched_disks
 
   def initialize
-    @blocks_per_kilobyte = 4 # TODO: calculate from info in /proc?  Where?
-    @proc_names = proc_names
     @start_time = Time.now
+
+    @blocks_per_kilobyte = 4 # TODO: calculate from info in /proc?  Where?
+    @bytes_per_disk_sector = sector_size
     @last_called_time = start_time
     @last_cpu_data = nil
     @last_net_data = nil
     @last_procstat_data = nil
     @mounted_partitions = mounts
+    @proc_names = proc_names
+    @watched_disks = disks
+    @num_cpu = 8
   end
 
   def pids(cmd)
@@ -89,12 +105,13 @@ class LinuxOSStats
     #puts "Total elapsed seconds: #{Time.now - start_time}"
     #puts "Seconds since last call: #{Time.now - last_called_time}"
     os_perf_stats = {}
-    os_perf_stats[:cpu] = cpu_summary
-    os_perf_stats[:net] = net
-    os_perf_stats[:partition_use] = disk_storage
-    os_perf_stats[:load_avg] = load_avg
-    os_perf_stats[:file_descriptor] = open_files
-    os_perf_stats[:memory] = memory
+    #os_perf_stats[:cpu] = cpu_summary
+    #os_perf_stats[:net] = net
+    #os_perf_stats[:partition_use] = disk_storage
+    #os_perf_stats[:load_avg] = load_avg
+    #os_perf_stats[:file_descriptor] = open_files
+    #os_perf_stats[:memory] = memory
+    os_perf_stats[:disk_io_blockstats] = disk_io_blockstats
     @last_called_time = Time.now
     os_perf_stats
   end
@@ -104,7 +121,7 @@ class LinuxOSStats
 
 
   def cpu_summary
-    # execution time: 0.6 ms  [MED]
+    # execution time: 0.6 ms  [MEDIUM]
     cpu_report = {}
     cpu_data = {}
     procstat_data = {}
@@ -176,12 +193,37 @@ class LinuxOSStats
     net_report
   end
 
-
-  def disk_io
-    # iops
-    # bytes
-    # bandwidth capacity %
+  # NEW
+  def disk_io_blockstats
+    # execution time: 0.24 ms  [LOW]
+    all_disk_report = {}
+    disk_stats = {}
+    elapsed_time = Time.now - last_called_time
+    watched_disks.each do |disk_name|
+      stats = BlockIOStat.new("/sys/block/#{disk_name}/stat", bytes_per_disk_sector)
+      disk_stats[disk_name] = stats
+      disk_report = {}
+      disk_report[:in_progress] = stats.in_progress
+      #puts "#{Time.now} LDS: #{@last_disk_stats}"
+      if @last_disk_stats_2
+        last = @last_disk_stats_2[disk_name]
+        disk_report[:reads_persec] = (stats.reads - last.reads) / elapsed_time
+        disk_report[:writes_persec] = (stats.writes - last.writes) / elapsed_time
+        disk_report[:bytes_read_persec] = (stats.read_bytes - last.read_bytes) / elapsed_time
+        disk_report[:bytes_written_persec] = (stats.write_bytes - last.write_bytes) / elapsed_time
+        cpums = elapsed_time * num_cpu * 1.25
+        pct_active = (stats.active_time_ms - last.active_time_ms) / cpums
+        # pct_active is an approximation, which may occasionally be a bit over 100%.  We
+        # cap it here at 100 to avoid confusion
+        pct_active = 100 if pct_active > 100
+        disk_report[:percent_active] = pct_active
+      end
+      all_disk_report[disk_name] = disk_report
+    end
+    @last_disk_stats_2 = disk_stats
+    all_disk_report
   end
+
 
   def disk_storage
     # execution time: 0.3 ms  [LOW]
@@ -205,23 +247,28 @@ class LinuxOSStats
     # is a large file)
     #
     # TODO: investigate using syscall to get this more cheaply
+    # TODO: include page_cache info
     mem_report = {}
     IO.readlines(MEMORY_DATA_FILE).each do |line|
       if line =~ /^#{MEM_TOTAL}/
         #puts line.split[1], line.split[1].to_i
-        mem_report[:mem_total] = line.split()[1].to_i
+        mem_report[:mem_total_kb] = line.split()[1].to_i
         next
       end
       if line =~ /^#{MEM_FREE}/
-        mem_report[:mem_free] = line.split()[1].to_i
+        mem_report[:mem_free_kb] = line.split()[1].to_i
+        next
+      end
+      if line =~ /^#{PAGE_CACHE}/
+        mem_report[:page_cache_kb] = line.split()[1].to_i
         next
       end
       if line =~ /^#{SWAP_TOTAL}/
-        mem_report[:swap_total] = line.split()[1].to_i
+        mem_report[:swap_total_kb] = line.split()[1].to_i
         next
       end
       if line =~ /^#{SWAP_FREE}/
-        mem_report[:swap_free] = line.split()[1].to_i
+        mem_report[:swap_free_kb] = line.split()[1].to_i
         next
       end
     end
@@ -259,7 +306,6 @@ class LinuxOSStats
   #   <used kilobytes>
   #   <max kilobytes>
   # ]
-  # Calls to statvfs may be useful too
   def partition_used(partition)
     b=' '*128
     syscall(137, partition, b)
@@ -278,5 +324,21 @@ class LinuxOSStats
       mount_list.reject! { |x| x =~ /#{partition}/ }
     end
     mount_list
+  end
+
+  def disks
+    disk_list = []
+    IO.readlines(DISK_STATS_DATA_FILE).each do |line|
+      words = line.split
+      disk_list.push words[2]
+    end
+    IGNORE_DISKS.each do |pattern|
+      disk_list.reject! { |x| x =~ /#{pattern}/ }
+    end
+    disk_list
+  end
+
+  def sector_size
+    File.read(SECTOR_SIZE_DATA_FILE).strip().to_i
   end
 end

@@ -3,12 +3,13 @@
 require 'pp'
 require 'time'
 require 'pl_procstat'
+require 'json'
 
 # This executable may serve as a useful command-line tool,
 # but its primary purpose is to provide an example client
 # for the stats library.
 
-DEFAULT_DELAY_SEC = 0.8
+DEFAULT_DELAY_SEC = 3
 DEFAULT_ITERATIONS = 10
 
 delay_sec = ARGV[0] ? ARGV[0].to_i : DEFAULT_DELAY_SEC
@@ -23,7 +24,7 @@ iterations.times do
   report = stats.report
   elapsed_time = Time.now - start
   total_time += elapsed_time
-  #pp report
-  puts "Generating the report took #{elapsed_time} seconds"
+  puts JSON.pretty_generate report
+  puts "Generating the report took #{elapsed_time*1000} ms"
 end
-puts "Total time: #{total_time}, mean: #{1000.0 *total_time/iterations} ms"
+puts "Total time: #{total_time * 1000.0} ms, mean: #{1000.0 *total_time/iterations} ms"

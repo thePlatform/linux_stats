@@ -1,4 +1,4 @@
-module BlockIO
+module Procstat::BlockIO
 
   module Column
     READS = 0

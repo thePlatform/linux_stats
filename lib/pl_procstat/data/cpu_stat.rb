@@ -1,4 +1,4 @@
-module CPU
+module Procstat::CPU
   module Column
     USER = 1
     NICE = 2

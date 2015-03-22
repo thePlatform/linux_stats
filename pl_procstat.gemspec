@@ -5,7 +5,7 @@ require 'pl_procstat/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'pl_procstat'
-  spec.version       = PlProcstat::VERSION
+  spec.version       = Procstat::VERSION
   spec.authors       = ['Travis Bear']
   spec.email         = ['travis.bear@theplatform.com']
   spec.summary       = 'Lightweight OS stats extracted from /proc'

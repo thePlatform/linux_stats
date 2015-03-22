@@ -1,4 +1,4 @@
-module Net
+module Procstat::Net
   module Column
     BYTES_RX = 0
     ERRORS_RX = 2

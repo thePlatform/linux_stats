@@ -8,8 +8,9 @@ require 'json'
 # but its primary purpose is to provide an example client
 # for the stats library.
 
-DEFAULT_DELAY_SEC = 1
-DEFAULT_ITERATIONS = 2
+DEFAULT_DELAY_SEC = 0.2
+DEFAULT_ITERATIONS = 100
+PROCESS_NAME = 'chrome'
 
 delay_sec = ARGV[0] ? ARGV[0].to_i : DEFAULT_DELAY_SEC
 iterations = ARGV[1] ? ARGV[1].to_i : DEFAULT_ITERATIONS
@@ -20,7 +21,7 @@ total_time = 0.0
 iterations.times do
   sleep(delay_sec)
   start = Time.now
-  report = stats.report
+  report = Procstat.pids(PROCESS_NAME)
   elapsed_time = Time.now - start
   total_time += elapsed_time
   puts JSON.pretty_generate report

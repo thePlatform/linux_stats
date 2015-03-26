@@ -56,13 +56,29 @@ module Procstat::CPU
       return report unless prev
       # calculate avgs since the last snapshot
       elapsed_jiffies = total_jiffies - prev.total_jiffies
-      report[:idle_pct] = 100.0*(idle-prev.idle)/elapsed_jiffies
       report[:user_pct] = 100.0*(user-prev.user)/elapsed_jiffies
+      report[:nice_pct] = 100.0*(nice-prev.nice)/elapsed_jiffies
       report[:system_pct] = 100.0*(system-prev.system)/elapsed_jiffies
+      report[:idle_pct] = 100.0*(idle-prev.idle)/elapsed_jiffies
       report[:iowait_pct] = 100.0*(iowait-prev.iowait)/elapsed_jiffies
+      report[:irq_pct] = 100.0*(irq-prev.irq)/elapsed_jiffies
       report[:softirq_pct] = 100.0*(softirq-prev.softirq)/elapsed_jiffies
+      report[:total] = sum_of_stats report
       report
     end
 
+    private
+
+    def sum_of_stats(report)
+      # these should all add to 100% or very near.
+      tot = report[:user_pct]
+      tot += report[:nice_pct]
+      tot += report[:system_pct]
+      tot += report[:idle_pct]
+      tot += report[:iowait_pct]
+      tot +=report[:irq_pct]
+      tot += report[:softirq_pct]
+      tot
+    end
   end
 end

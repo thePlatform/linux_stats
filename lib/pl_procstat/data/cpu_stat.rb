@@ -37,6 +37,7 @@ module Procstat::CPU
 
       words = stat_line.split
       @name = words[0]
+      @name = 'all' if @name == 'cpu'
       @total_jiffies = 0
       words.slice(1, words.length).each do |stat|
         @total_jiffies += stat.to_i
@@ -63,7 +64,7 @@ module Procstat::CPU
       report[:iowait_pct] = 100.0*(iowait-prev.iowait)/elapsed_jiffies
       report[:irq_pct] = 100.0*(irq-prev.irq)/elapsed_jiffies
       report[:softirq_pct] = 100.0*(softirq-prev.softirq)/elapsed_jiffies
-      report[:total] = sum_of_stats report
+      report[:total] = 100.0 - report[:idle_pct]
       report
     end
 

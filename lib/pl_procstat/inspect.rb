@@ -26,9 +26,10 @@ module Procstat
         '^sd.*[0-9]'
     ]
     IGNORE_PARTITIONS = [
+        'docker',
         '^\/proc',
-        '^\/sys',
-        'docker'
+        '^\/run',
+        '^\/sys'
     ]
 
     def Inspect.cpuinfo

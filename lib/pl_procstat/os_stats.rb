@@ -216,6 +216,9 @@ module Procstat
         storage_report[partition] = {}
         storage_report[partition][:total_kb] = usage[0]
         storage_report[partition][:available_kb] = usage[1]
+        unless usage[0] == 0
+          storage_report[partition][:used_pct] = usage[1].to_f / usage[0].to_f
+        end
       end
       storage_report
     end

@@ -2,6 +2,7 @@ require 'pl_procstat/version'
 require 'pl_procstat/data/cpu_stat'
 require 'pl_procstat/data/net_stat'
 require 'pl_procstat/data/disk_io_stat'
+require 'pl_procstat/data/vmstat'
 
 require 'pl_procstat/inspect'
 require 'pl_procstat/os_stats'

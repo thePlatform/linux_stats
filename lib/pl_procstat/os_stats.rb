@@ -22,6 +22,7 @@ module Procstat
     MEMORY = '/proc/meminfo'
     NET_BANDWIDTH = '/proc/net/dev'
     NET_SOCKETS = '/proc/net/sockstat'
+    VMSTAT = '/proc/vmstat'
   end
 
   MEM_TOTAL = 'MemTotal'

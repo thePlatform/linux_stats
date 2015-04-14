@@ -261,7 +261,7 @@ module Procstat
       end
       mem_report[:mem_used_pct] = 100 - 100.0 * mem_report[:mem_free_kb]/mem_report[:mem_total_kb]
       mem_report[:swap_used_pct] = 100 - 100.0 * mem_report[:swap_free_kb]/mem_report[:swap_total_kb]
-      mem_report.merge(@vmstat.report)
+      mem_report.merge!(@vmstat.report)
       mem_report
     end
 

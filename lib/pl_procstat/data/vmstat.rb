@@ -17,21 +17,22 @@ module Procstat
 
     def initialize(data=nil)
       set_stats data
-      puts @current_stats
     end
 
-    def report(elapsed_time=nil)
+    def report(elapsed_time=nil, data=nil)
       prev_stats = @current_stats
       prev_timestamp = @current_timestamp
-      set_stats
+      set_stats data
       elapsed_time = @current_timestamp - prev_timestamp unless elapsed_time
-      puts "Etime: #{elapsed_time}"
-      puts "Current: #{@current_stats}"
-      puts "prev: #{prev_stats}"
       ret = {}
       ret[:pagein_kb_persec] = (@current_stats[:pagein_kb]-prev_stats[:pagein_kb])/elapsed_time
+      ret[:pageout_kb_persec] = (@current_stats[:pageout_kb]-prev_stats[:pageout_kb])/elapsed_time
+      ret[:swapin_kb_persec] = (@current_stats[:swapin_kb]-prev_stats[:swapin_kb])/elapsed_time
+      ret[:swapout_kb_persec] = (@current_stats[:swapout_kb]-prev_stats[:swapout_kb])/elapsed_time
       ret
     end
+
+    private
 
     # gets a snapshot of the swap and page info in /proc/vmstat
     def set_stats(vmstat_data=nil)

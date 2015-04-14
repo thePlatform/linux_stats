@@ -34,19 +34,20 @@ describe 'Vmstat' do
 
   it 'should build stats from /proc/vmstat data' do
     vmstat = Procstat::Vmstat.new(VMSTAT_STRING)
-    expect(vmstat.current_stats[:pagein_kb]).to eq VMSTAT_DATA[:one][:page_in]
-    # expect(stats[:pageout_kb]).to eq VMSTAT_DATA[:one][:page_out]
-    # expect(stats[:swapin_kb]).to eq VMSTAT_DATA[:one][:swap_in]
-    # expect(stats[:swapout_kb]).to eq VMSTAT_DATA[:one][:swap_out]
+    expect(vmstat.current_stats[:pagein_kb]).to eq VMSTAT_DATA[:page_in]
+    expect(vmstat.current_stats[:pageout_kb]).to eq VMSTAT_DATA[:page_out]
+    expect(vmstat.current_stats[:swapin_kb]).to eq VMSTAT_DATA[:swap_in]
+    expect(vmstat.current_stats[:swapout_kb]).to eq VMSTAT_DATA[:swap_out]
   end
 
   it 'should generate a good report' do
-    vmstat = Procstat::Vmstat.new()
-    vmstat.set_stats(VMSTAT_STRING)
-    vmstat.set_stats(VMSTAT_STRING_2)
+    vmstat = Procstat::Vmstat.new(VMSTAT_STRING)
     elapsed = 2.0
-    report = vmstat.report(elapsed)
+    report = vmstat.report(elapsed, VMSTAT_STRING_2)
     expect(report[:pagein_kb_persec]).to eq PAGEIN_DELTA/elapsed
+    expect(report[:pageout_kb_persec]).to eq PAGEOUT_DELTA/elapsed
+    expect(report[:swapin_kb_persec]).to eq SWAPIN_DELTA/elapsed
+    expect(report[:swapout_kb_persec]).to eq SWAPOUT_DELTA/elapsed
   end
 
 end

@@ -2,10 +2,9 @@ require 'pl_procstat'
 
 # inspect.rb
 #
-# Methods here will typically be called a single time during monitor
-# initialization rather than on an ongoing basis during report
-# generation.  There is less emphasis on getting these to perform
-# as fast as possible, given their one-time use.
+# This module contains relatively expensive methods that will be
+# called a single time  during monitor initialization.
+
 module Procstat
   module Inspect
     module DataFile

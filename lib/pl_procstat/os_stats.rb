@@ -86,6 +86,7 @@ module Procstat
       @mounted_partitions = Inspect.mounts
       @watched_disks = Inspect.disks
       @num_cpu = Inspect.cpuinfo
+      @vmstat = Vmstat.new
     end
 
     def report
@@ -234,7 +235,6 @@ module Procstat
       # is a large file)
       #
       # TODO: investigate using syscall to get this more cheaply
-      # TODO: include page_cache info
       mem_report = {}
       IO.readlines(DataFile::MEMORY).each do |line|
         if line =~ /^#{MEM_TOTAL}/
@@ -261,6 +261,7 @@ module Procstat
       end
       mem_report[:mem_used_pct] = 100 - 100.0 * mem_report[:mem_free_kb]/mem_report[:mem_total_kb]
       mem_report[:swap_used_pct] = 100 - 100.0 * mem_report[:swap_free_kb]/mem_report[:swap_total_kb]
+      mem_report.merge(@vmstat.report)
       mem_report
     end
 

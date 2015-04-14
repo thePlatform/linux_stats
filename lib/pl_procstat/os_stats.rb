@@ -258,6 +258,8 @@ module Procstat
           next
         end
       end
+      mem_report[:mem_used_pct] = 100 - 100.0 * mem_report[:mem_free_kb]/mem_report[:mem_total_kb]
+      mem_report[:swap_used_pct] = 100 - 100.0 * mem_report[:swap_free_kb]/mem_report[:swap_total_kb]
       mem_report
     end
 
@@ -284,6 +286,7 @@ module Procstat
       # 2.6 and above
       file_descriptors[:used] = allocated - available
       file_descriptors[:max] = data[2].to_i
+      file_descriptors[:used_pct] = 100.0 * file_descriptors[:used]/file_descriptors[:max]
       file_descriptors
     end
 

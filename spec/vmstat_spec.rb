@@ -34,7 +34,7 @@ include Procstat::OS
 
 describe 'Vmstat' do
 
-  it 'should build stats from /proc/vmstat os_data' do
+  it 'should build stats from /proc/vmstat os' do
     vmstat = Vmstat::Stat.new(VMSTAT_STRING)
     expect(vmstat.current_stats[:pagein_kb]).to eq VMSTAT_DATA[:page_in]
     expect(vmstat.current_stats[:pageout_kb]).to eq VMSTAT_DATA[:page_out]

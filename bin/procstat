@@ -14,12 +14,11 @@ DEFAULT_ITERATIONS = 1
 delay_sec = ARGV[0] ? ARGV[0].to_i : DEFAULT_DELAY_SEC
 iterations = ARGV[1] ? ARGV[1].to_i : DEFAULT_ITERATIONS
 
-stats = Procstat::OS::LinuxStats.new
 total_time = 0.0
 iterations.times do
   sleep(delay_sec)
   start = Time.now
-  report = stats.report
+  report = Procstat::OS.report
   elapsed_time = Time.now - start
   total_time += elapsed_time
   puts JSON.pretty_generate report

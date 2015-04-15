@@ -57,7 +57,6 @@ module Procstat::OS::Vmstat
           @current_stats[:swapout_kb] = line.split[1].to_i
         end
       end
-      @current_stats
     end
   end
 

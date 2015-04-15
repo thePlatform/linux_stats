@@ -8,11 +8,14 @@ require 'pl_procstat'
 #  * Disk use
 #  * ...
 #
-# For gathering performance os_data on overall OS performance, see
+# For gathering performance os on overall OS performance, see
 # os_stats.rb
 #
 
+PID_INDEX = 2
+
 module Procstat
+
   def Procstat.pids(cmd)
     # execution time: 7ms  [VERY HIGH]
     pid_list = []
@@ -21,4 +24,5 @@ module Procstat
     end
     pid_list
   end
+
 end

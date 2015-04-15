@@ -5,27 +5,23 @@ end
 module Procstat
   # new
   module OS
-    module Vmstat
+    module BlockIO
     end
-    module ProcMeminfo
+    module Loadavg
+    end
+    module NetBandwidth
+    end
+    module NetSocket
+    end
+    module Meminfo
     end
     module ProcMounts
     end
+    module Vmstat
+    end
+  end
+  module PID
+
   end
 
-  # old
-  module Inspect
-    module DataFile
-    end
-  end
-  module CPU
-  end
-  module BlockIO
-  end
-  module Net
-  end
-  module OS
-    module DataFile
-    end
-  end
 end

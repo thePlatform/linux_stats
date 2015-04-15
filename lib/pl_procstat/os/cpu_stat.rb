@@ -1,4 +1,5 @@
-module Procstat::CPU
+module Procstat::OS::CPU
+
   module Column
     USER = 1
     NICE = 2
@@ -10,9 +11,57 @@ module Procstat::CPU
     STEAL = 8
   end
 
-  class Stats
+  DATA_FILE = '/proc/stat'
 
-    # ingests a line from /proc/stat into a os_data structure of CPU
+  class Stat
+
+    def initialize(data=nil)
+      set_stats data
+    end
+
+    def report(elapsed_time=nil, data=nil)
+      prev_stats = @current_stats
+      prev_timestamp = @current_timestamp
+      set_stats data
+      @current_timestamp = Time.now()
+      elapsed_time = @current_timestamp - prev_timestamp unless elapsed_time
+      ret = {}
+      ret[:cpus] = {}
+      @current_stats[:cpu].keys.each do |cpu_name|
+        ret[:cpus][cpu_name] = @current_stats[:cpu][cpu_name].report(prev_stats[:cpu][cpu_name])
+      end
+      ret[:interrupts_persec] =
+          (@current_stats[:interrupts] - prev_stats[:interrupts])/ elapsed_time
+      ret[:ctxt_switches_persec] =
+          (@current_stats[:context_switches]-prev_stats[:context_switches]) / elapsed_time
+      ret[:procs_running] = @current_stats[:procs_running]
+      ret[:procs_blocked] = @current_stats[:procs_blocked]
+      ret
+    end
+
+    def set_stats(proc_stat_data=nil)
+      proc_stat_data = File.read(DATA_FILE) unless proc_stat_data
+      @current_timestamp = Time.now()
+      @current_stats = {}
+      @current_stats[:cpu] = {}
+      proc_stat_data.each_line do |line|
+        @current_stats[:interrupts] = line.split()[1].to_i if line =~ /^intr/
+        @current_stats[:context_switches]= line.split()[1].to_i if line =~/^ctxt/
+        @current_stats[:procs_running] = line.split()[1].to_i if line =~/^procs_running/
+        @current_stats[:procs_blocked] = line.split()[1].to_i if line =~/^procs_blocked/
+        if line =~ /^cpu/
+          cpu_stat = CPUData.new line
+          @current_stats[:cpu][cpu_stat.name] = cpu_stat
+        end
+      end
+    end
+
+  end
+
+
+  class CPUData
+
+    # ingests a line from /proc/stat into a os structure of CPU
     # usage values
 
     attr_reader :idle,
@@ -88,4 +137,15 @@ module Procstat::CPU
       tot
     end
   end
+
+  def self.report(elapsed_time=nil, data=nil)
+    @@stat.report(elapsed_time)
+  end
+
+  def self.init(data=nil)
+    @@stat = Procstat::OS::CPU::Stat.new(data)
+  end
 end
+
+Procstat::OS::CPU.init
+

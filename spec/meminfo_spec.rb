@@ -12,21 +12,19 @@ include Procstat::OS
 
 MEMINFO_STRING = "
 something_we_don't_care_about 42
-#{ProcMeminfo::MEM_FREE} #{MEMINFO_DATA[:mem_free]}
-#{ProcMeminfo::MEM_TOTAL} #{MEMINFO_DATA[:mem_total]}
-#{ProcMeminfo::PAGE_CACHE} #{MEMINFO_DATA[:page_cache]}
-#{ProcMeminfo::SWAP_FREE} #{MEMINFO_DATA[:swap_free]}
-#{ProcMeminfo::SWAP_TOTAL} #{MEMINFO_DATA[:swap_total]}
+#{Meminfo::MEM_FREE} #{MEMINFO_DATA[:mem_free]}
+#{Meminfo::MEM_TOTAL} #{MEMINFO_DATA[:mem_total]}
+#{Meminfo::PAGE_CACHE} #{MEMINFO_DATA[:page_cache]}
+#{Meminfo::SWAP_FREE} #{MEMINFO_DATA[:swap_free]}
+#{Meminfo::SWAP_TOTAL} #{MEMINFO_DATA[:swap_total]}
 something_else_to_ignore 1
 "
 
-include Procstat::OS
-
-describe 'ProcMeminfo' do
+describe 'ProcMeminfo module functions' do
 
   # happy path
   it 'should generate a good report' do
-    report = ProcMeminfo.report(MEMINFO_STRING)
+    report = Meminfo.report(MEMINFO_STRING)
     expect(report[:mem_free_kb]).to eq MEMINFO_DATA[:mem_free]
     expect(report[:mem_total_kb]).to eq MEMINFO_DATA[:mem_total]
     free_mem = MEMINFO_DATA[:mem_free].to_f/MEMINFO_DATA[:mem_total].to_f

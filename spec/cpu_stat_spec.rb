@@ -11,14 +11,14 @@ describe 'CPU Stats Class' do
     expect(cpu_stat.name).to eq 'all'
   end
 
-  it 'should parse Centos 5 data' do
+  it 'should parse Centos 5 os_data' do
     cpu_stat = Procstat::CPU::Stats.new(CENTOS_5_CPU_DATA)
     expect(cpu_stat.name).to eq 'cpu1'
     expect(cpu_stat.user).to eq 53054583
     expect(cpu_stat.nice).to eq 690
   end
 
-  it 'should parse Centos 6 data' do
+  it 'should parse Centos 6 os_data' do
     cpu_stat = Procstat::CPU::Stats.new(CENTOS_6_CPU_DATA)
     expect(cpu_stat.name).to eq 'cpu0'
     expect(cpu_stat.user).to eq 2533647

@@ -8,14 +8,13 @@ require 'json'
 # but its primary purpose is to provide an example client
 # for the stats library.
 
-DEFAULT_DELAY_SEC = 1
-DEFAULT_ITERATIONS = 2
+DEFAULT_DELAY_SEC = 0.5
+DEFAULT_ITERATIONS = 1
 
 delay_sec = ARGV[0] ? ARGV[0].to_i : DEFAULT_DELAY_SEC
 iterations = ARGV[1] ? ARGV[1].to_i : DEFAULT_ITERATIONS
 
-stats = Procstat::LinuxStats.new
-stats.report
+stats = Procstat::OS::LinuxStats.new
 total_time = 0.0
 iterations.times do
   sleep(delay_sec)

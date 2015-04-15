@@ -12,7 +12,7 @@ module Procstat::CPU
 
   class Stats
 
-    # ingests a line from /proc/stat into a data structure of CPU
+    # ingests a line from /proc/stat into a os_data structure of CPU
     # usage values
 
     attr_reader :idle,

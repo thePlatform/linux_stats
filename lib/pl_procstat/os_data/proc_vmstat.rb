@@ -1,6 +1,6 @@
 require 'pl_procstat'
 
-module Procstat
+module Procstat::OS::Vmstat
 
   module Match
     PAGE_IN = '^pgpgin'
@@ -9,10 +9,11 @@ module Procstat
     SWAP_OUT = '^pswpout'
   end
 
+  DATA_FILE = '/proc/vmstat'
 
-  # I think I like this pattern better than the one in cpu_stat.rb or disk_io_stat.rb.
+  # I think I like this pattern better than the one in cpu_stat.rb or sys_block_stat.rb.
   # It reduces object creation and pulls boilerplate code out of os_stats.rb
-  class Vmstat
+  class Stat
     attr_accessor :current_stats, :current_timestamp
 
     def initialize(data=nil)
@@ -36,18 +37,21 @@ module Procstat
 
     # gets a snapshot of the swap and page info in /proc/vmstat
     def set_stats(vmstat_data=nil)
-      vmstat_data = File.read(Procstat::DataFile::VMSTAT) unless vmstat_data
+      vmstat_data = File.read(DATA_FILE) unless vmstat_data
       @current_timestamp = Time.now()
       @current_stats = {}
       vmstat_data.each_line do |line|
         if line =~ /#{Match::PAGE_IN}/
           @current_stats[:pagein_kb] = line.split[1].to_i
+          next
         end
         if line =~ /#{Match::PAGE_OUT}/
           @current_stats[:pageout_kb] = line.split[1].to_i
+          next
         end
         if line =~ /#{Match::SWAP_IN}/
           @current_stats[:swapin_kb] = line.split[1].to_i
+          next
         end
         if line =~ /#{Match::SWAP_OUT}/
           @current_stats[:swapout_kb] = line.split[1].to_i
@@ -55,7 +59,15 @@ module Procstat
       end
       @current_stats
     end
-
   end
 
+  def self.init(data=nil)
+    @@stat = Procstat::OS::Vmstat::Stat.new(data)
+  end
+
+  def self.report(elapsed_time=nil, data=nil)
+    @@stat.report(elapsed_time, data)
+  end
 end
+
+Procstat::OS::Vmstat.init

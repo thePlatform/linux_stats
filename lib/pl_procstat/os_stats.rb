@@ -10,27 +10,21 @@ require 'pl_procstat'
 #  * Disk use
 #  * ...
 #
-# For gathering performance data on individual processes, see
+# For gathering performance os_data on individual processes, see
 # process_stats.rb
 #
 
-module Procstat
+module Procstat::OS
   module DataFile
     CPU = '/proc/stat'
     FILE_DESCRIPTOR = '/proc/sys/fs/file-nr'
     LOAD_AVG = '/proc/loadavg'
-    MEMORY = '/proc/meminfo'
     NET_BANDWIDTH = '/proc/net/dev'
     NET_SOCKETS = '/proc/net/sockstat'
-    VMSTAT = '/proc/vmstat'
   end
 
-  MEM_TOTAL = 'MemTotal'
-  MEM_FREE = 'MemFree'
-  PAGE_CACHE = 'Cached'
+
   PID_INDEX = 2
-  SWAP_TOTAL = 'SwapTotal'
-  SWAP_FREE = 'SwapFree'
 
 
   class LinuxStats
@@ -40,21 +34,21 @@ module Procstat
     #
     # Goals:
     #   * be as fast and lightweight as possible
-    #   * gather all data in 2ms or less
+    #   * gather all os_data in 10 ms or less
     #   * no shelling out to existing system tools (sar, vmstat, etc.) since we
     #     don't want the expense of creating a new process.
     #   * provide useful statistics in the form of a sensible hash that clients
     #     can inspect as desired.
     #
-    # Goal number two seems to require us to get our data by inspecting the /proc
+    # Goal number two seems to require us to get our os_data by inspecting the /proc
     # filesystem.
 
-    # Other ruby tools exist for getting CPU data, etc.  Unfortunately they all
+    # Other ruby tools exist for getting CPU os_data, etc.  Unfortunately they all
     # seem to rely on shelling out to native system tools as the basis for
-    # retrieving their underlying data.
+    # retrieving their underlying os_data.
     #
     # By going directly to /proc, we have a higher level of control of the type
-    # of data we make available.
+    # of os_data we make available.
     #
     #
     # Resources:
@@ -64,41 +58,48 @@ module Procstat
     #
     #
 
-    attr_reader :blocks_per_kilobyte,
-                :bytes_per_disk_sector,
+    attr_reader  :bytes_per_disk_sector,
                 :last_called_time,
                 :last_cpu_data,
                 :last_net_data,
                 :last_procstat_data,
-                :mounted_partitions,
+
                 :num_cpu,
                 :start_time,
                 :watched_disks
 
     def initialize
       @start_time = Time.now
-      @blocks_per_kilobyte = 4 # TODO: calculate from info in /proc?  Where?
+
       @bytes_per_disk_sector = Inspect.sector_size
       @last_called_time = start_time
       @last_cpu_data = nil
       @last_net_data = nil
       @last_procstat_data = nil
-      @mounted_partitions = Inspect.mounts
+
       @watched_disks = Inspect.disks
       @num_cpu = Inspect.cpuinfo
-      @vmstat = Vmstat.new
+
     end
 
     def report
       os_perf_stats = {}
-      os_perf_stats[:cpu] = cpu
-      os_perf_stats[:net] = net
-      os_perf_stats[:partition_use] = disk_space
-      os_perf_stats[:load_avg] = load_avg
-      os_perf_stats[:file_descriptor] = open_files
-      os_perf_stats[:memory] = memory
-      os_perf_stats[:disk_io] = disk_io
+
+      # -- old --
+      # os_perf_stats[:cpu] = cpu
+      # os_perf_stats[:net] = net
+      # os_perf_stats[:partition_use] = disk_space
+      # os_perf_stats[:load_avg] = load_avg
+      # os_perf_stats[:file_descriptor] = open_files
+      # os_perf_stats[:memory] = memory
+      # os_perf_stats[:disk_io] = disk_io
       @last_called_time = Time.now
+
+      # -- new --
+      os_perf_stats[:memory] = Meminfo.report
+      os_perf_stats[:memory].merge! Vmstat.report
+      os_perf_stats[:partition_use] = Mounts.report
+
       os_perf_stats
     end
 
@@ -111,7 +112,7 @@ module Procstat
       cpu_report = {}
       cpu_data = {}
       procstat_data = {}
-      # get current data
+      # get current os_data
       IO.readlines(DataFile::CPU).each do |line|
         if line =~ /^cpu/
           cpu_stat = CPU::Stats.new line
@@ -127,7 +128,7 @@ module Procstat
         end
       end
       elapsed_time = Time.now - last_called_time
-      # generate report by comparing current data to prev data
+      # generate report by comparing current os_data to prev os_data
       if last_cpu_data
         cpu_data.keys.each do |cpu_name|
           cpu_report[cpu_name] = cpu_data[cpu_name].report(last_cpu_data[cpu_name])
@@ -159,7 +160,7 @@ module Procstat
         net_data.keys.each do |interface|
           net_report[interface] = {}
           net_report[interface][:tx_bytes_persec] =
-              (net_data[interface].bytes_tx - last_net_data[interface].bytes_tx)/ elapsed_time
+              (net_data[interface].bytes_tx - last_net_data[interface].bytes_tx)/elapsed_time
           net_report[interface][:rx_bytes_persec] =
               (net_data[interface].bytes_rx-last_net_data[interface].bytes_rx)/elapsed_time
           net_report[interface][:errors_rx_persec] =
@@ -210,60 +211,8 @@ module Procstat
     end
 
 
-    def disk_space
-      # execution time: 0.3 ms  [LOW]
-      storage_report = {}
-      mounted_partitions.each do |partition|
-        usage = partition_used(partition)
-        storage_report[partition] = {}
-        storage_report[partition][:total_kb] = usage[0]
-        storage_report[partition][:available_kb] = usage[1]
-        unless usage[0] == 0
-          storage_report[partition][:used_pct] = usage[1].to_f / usage[0].to_f
-        end
-      end
-      storage_report
-    end
 
-    def memory
-      # execution time: 2.4 ms  [VERY HIGH]
-      #
-      # There is a bunch more stuff available in /proc/meminfo than we're using
-      # here, so we have the option to pull in many additional metrics.  This is
-      # a relatively expensive call, it more than doubles the execution time of
-      # of an entire stats gathering iteration.  (possibly because /proc/meminfo
-      # is a large file)
-      #
-      # TODO: investigate using syscall to get this more cheaply
-      mem_report = {}
-      IO.readlines(DataFile::MEMORY).each do |line|
-        if line =~ /^#{MEM_TOTAL}/
-          #puts line.split[1], line.split[1].to_i
-          mem_report[:mem_total_kb] = line.split()[1].to_i
-          next
-        end
-        if line =~ /^#{MEM_FREE}/
-          mem_report[:mem_free_kb] = line.split()[1].to_i
-          next
-        end
-        if line =~ /^#{PAGE_CACHE}/
-          mem_report[:page_cache_kb] = line.split()[1].to_i
-          next
-        end
-        if line =~ /^#{SWAP_TOTAL}/
-          mem_report[:swap_total_kb] = line.split()[1].to_i
-          next
-        end
-        if line =~ /^#{SWAP_FREE}/
-          mem_report[:swap_free_kb] = line.split()[1].to_i
-          next
-        end
-      end
-      mem_report[:mem_used_pct] = 100 - 100.0 * mem_report[:mem_free_kb]/mem_report[:mem_total_kb]
-      mem_report[:swap_used_pct] = 100 - 100.0 * mem_report[:swap_free_kb]/mem_report[:swap_total_kb]
-      mem_report.merge!(@vmstat.report)
-      mem_report
-    end
+
 
     def load_avg
       # execution time: 0.12 ms  [LOW]
@@ -283,7 +232,7 @@ module Procstat
       data = File.read(DataFile::FILE_DESCRIPTOR).split
       allocated = data[0].to_i
       available = data[1].to_i
-      # for kernels 2.4 and below, 'used' is just data[0].  We could detect kernel version
+      # for kernels 2.4 and below, 'used' is just os_data[0].  We could detect kernel version
       # from /proc/version and handle old versions, but Centos 5 and 6 all have kernels
       # 2.6 and above
       file_descriptors[:used] = allocated - available
@@ -292,16 +241,6 @@ module Procstat
       file_descriptors
     end
 
-    # see https://www.ruby-forum.com/topic/4416522
-    # returns: array of partition use: [
-    #   <used kilobytes>
-    #   <max kilobytes>
-    # ]
-    def partition_used(partition)
-      b=' '*128
-      syscall(137, partition, b)
-      a=b.unpack('QQQQQ')
-      [a[2]*blocks_per_kilobyte, a[4]*blocks_per_kilobyte]
-    end
+
   end
 end

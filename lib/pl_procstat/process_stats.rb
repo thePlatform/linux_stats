@@ -8,7 +8,7 @@ require 'pl_procstat'
 #  * Disk use
 #  * ...
 #
-# For gathering performance data on overall OS performance, see
+# For gathering performance os_data on overall OS performance, see
 # os_stats.rb
 #
 

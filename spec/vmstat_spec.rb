@@ -30,18 +30,20 @@ pswpout #{VMSTAT_DATA[:swap_out]+ SWAPOUT_DELTA}
 pgalloc_dma 1
 "
 
+include Procstat::OS
+
 describe 'Vmstat' do
 
-  it 'should build stats from /proc/vmstat data' do
-    vmstat = Procstat::Vmstat.new(VMSTAT_STRING)
+  it 'should build stats from /proc/vmstat os_data' do
+    vmstat = Vmstat::Stat.new(VMSTAT_STRING)
     expect(vmstat.current_stats[:pagein_kb]).to eq VMSTAT_DATA[:page_in]
     expect(vmstat.current_stats[:pageout_kb]).to eq VMSTAT_DATA[:page_out]
     expect(vmstat.current_stats[:swapin_kb]).to eq VMSTAT_DATA[:swap_in]
     expect(vmstat.current_stats[:swapout_kb]).to eq VMSTAT_DATA[:swap_out]
   end
 
-  it 'should generate a good report' do
-    vmstat = Procstat::Vmstat.new(VMSTAT_STRING)
+  it 'should generate a good report from class' do
+    vmstat = Vmstat::Stat.new(VMSTAT_STRING)
     elapsed = 2.0
     report = vmstat.report(elapsed, VMSTAT_STRING_2)
     expect(report[:pagein_kb_persec]).to eq PAGEIN_DELTA/elapsed
@@ -50,4 +52,13 @@ describe 'Vmstat' do
     expect(report[:swapout_kb_persec]).to eq SWAPOUT_DELTA/elapsed
   end
 
+  it 'should generate a good report from module' do
+    Vmstat.init(VMSTAT_STRING)
+    elapsed = 2.0
+    report = Vmstat.report(elapsed, VMSTAT_STRING_2)
+    expect(report[:pagein_kb_persec]).to eq PAGEIN_DELTA/elapsed
+    expect(report[:pageout_kb_persec]).to eq PAGEOUT_DELTA/elapsed
+    expect(report[:swapin_kb_persec]).to eq SWAPIN_DELTA/elapsed
+    expect(report[:swapout_kb_persec]).to eq SWAPOUT_DELTA/elapsed
+  end
 end

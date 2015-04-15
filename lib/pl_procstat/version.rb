@@ -1,8 +1,19 @@
 module Procstat
-  VERSION = '0.1.7'
+  VERSION = '0.2.0'
 end
 
 module Procstat
+  # new
+  module OS
+    module Vmstat
+    end
+    module ProcMeminfo
+    end
+    module ProcMounts
+    end
+  end
+
+  # old
   module Inspect
     module DataFile
     end

@@ -14,9 +14,24 @@ require 'pl_procstat'
 
 PID_INDEX = 2
 
-module Procstat
+module Procstat::PID
 
-  def Procstat.pids(cmd)
+  def self.report(process_names)
+    ret = {}
+    process_names.each do |process_name|
+      process_pids = pids process_name
+      ret[process_name] = {}
+      ret[process_name][:count] = process_pids.size
+      process_pids.each do |pid|
+        stat = Procstat::Stat.new(pid)
+        ret[process_name][pid] = stat.report
+        # TODO -- other data processors go here
+      end
+    end
+    ret
+  end
+
+  def self.pids(cmd)
     # execution time: 7ms  [VERY HIGH]
     pid_list = []
     Dir['/proc/[0-9]*/cmdline'].each do |p|

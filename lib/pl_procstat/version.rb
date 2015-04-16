@@ -21,7 +21,8 @@ module Procstat
     end
   end
   module PID
-
+    module Procstat
+    end
   end
 
 end

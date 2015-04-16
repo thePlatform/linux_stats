@@ -10,6 +10,7 @@ require 'pl_procstat/os/proc_sys_file'
 require 'pl_procstat/os/proc_vmstat'
 require 'pl_procstat/os/sys_block_stat'
 
+require 'pl_procstat/pid/pid_stat'
 
 require 'pl_procstat/os_stats'
 require 'pl_procstat/process_stats'

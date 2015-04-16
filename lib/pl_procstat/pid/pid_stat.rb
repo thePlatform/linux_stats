@@ -1,27 +1,34 @@
 require 'pl_procstat'
 
-module Procstat::PID::Procstat
+module Procstat::PID::PidStat
 
   module Column
     CHILD_GUEST = 43
     CHILD_KERNEL = 16
     CHILD_USER = 15
     COMMAND = 1
+    RESIDENT_SET_SIZE = 23
     SELF_GUEST = 42
     SELF_KERNEL = 14
     SELF_USER = 13
+    START_TIME = 21
+    THREADS = 19
+    VMEM_SIZE = 22
   end
 
-  # TODO: this is almost universally 100, but we ought to get this via sysconf(_SC_CLK_TCK)
+  @@stats={}
+
+  # TODO: this value is almost universally 100, but we ought to derive it via sysconf(_SC_CLK_TCK)
   JIFFIES_PERSEC = 100.0
+  PAGE_SIZE_BYTES = `getconf PAGESIZE`.to_i
 
   class Stat
 
     attr_accessor :pid
 
     def initialize(pid, data=nil)
-      set_stats data
       @pid = pid
+      set_stats data
     end
 
     def set_stats(data=nil)
@@ -37,26 +44,31 @@ module Procstat::PID::Procstat
       elapsed_jiffies = JIFFIES_PERSEC * elapsed_seconds
       ret = {}
       ret[:name] = "#{@current_stats.cmd}_#{pid}"
-      puts "current: #{@current_stats}"
-      puts "pref: #{prev_stats}"
+      # puts "current: #{@current_stats}"
+      # puts "pref: #{prev_stats}"
       ret[:cpu] = {}
       proc_self = {
-          [:guest_pct] => 100.0*(@current_stats.se_guest - prev_stats.se_guest)/elapsed_jiffies,
-          [:kern_pct] => 100.0*(@current_stats.se_kernel - prev_stats.se_kernel)/elapsed_jiffies,
-          [:user_pct] => 100.0*(@current_stats.se_user - prev_stats.se_user)/elapsed_jiffies
+          guest_pct: 100.0*(@current_stats.se_guest - prev_stats.se_guest)/elapsed_jiffies,
+          kern_pct: 100.0*(@current_stats.se_kernel - prev_stats.se_kernel)/elapsed_jiffies,
+          user_pct: 100.0*(@current_stats.se_user - prev_stats.se_user)/elapsed_jiffies
       }
       ret[:cpu][:self] = proc_self
       proc_child = {
-          [:guest_pct] => 100.0*(@current_stats.ch_guest - prev_stats.ch_guest)/elapsed_jiffies,
-          [:kern_pct] => 100.0*(@current_stats.ch_kernel - prev_stats.ch_kernel)/elapsed_jiffies,
-          [:user_pct] => 100.0*(@current_stats.ch_user - prev_stats.ch_user)/elapsed_jiffies
+          guest_pct: 100.0*(@current_stats.ch_guest - prev_stats.ch_guest)/elapsed_jiffies,
+          kern_pct: 100.0*(@current_stats.ch_kernel - prev_stats.ch_kernel)/elapsed_jiffies,
+          user_pct: 100.0*(@current_stats.ch_user - prev_stats.ch_user)/elapsed_jiffies
       }
       ret[:cpu][:child] = proc_child
-      # ret[:cpu][:total] = {
-      #     [:guest_pct] => proc_child[:guest_pct] + proc_self[:guest_pct],
-      #     [:kern_pct] => proc_child[:kern_pct] + proc_self[:kern_pct],
-      #     [:user_pct] => proc_child[:user_pct] + proc_self[:user_pct],
-      # }
+      ret[:cpu][:total] = {
+          guest_pct: proc_child[:guest_pct] + proc_self[:guest_pct],
+          kern_pct: proc_child[:kern_pct] + proc_self[:kern_pct],
+          user_pct: proc_child[:user_pct] + proc_self[:user_pct],
+      }
+      ret[:mem] = {
+          resident_set_bytes: @current_stats.resident_set_pages * PAGE_SIZE_BYTES,
+          virtual_mem_bytes: @current_stats.virtual_mem_bytes
+      }
+      ret[:threads] = @current_stats.threads
       ret
     end
   end
@@ -68,28 +80,36 @@ module Procstat::PID::Procstat
                   :ch_user,
                   :cmd,
                   :pid,
+                  :resident_set_pages,
                   :se_guest,
                   :se_kernel,
                   :se_user,
+                  :start_time,
+                  :threads,
                   :tot_guest,
                   :tot_kernel,
-                  :tot_user
+                  :tot_user,
+                  :virtual_mem_bytes
 
     def initialize(pid, data=nil)
       puts "data nil? #{data.nil?}"
       data = File.read("/proc/#{pid}/stat") unless data
-      puts data
+      puts "Data: #{data}"
       words = data.split
       @cmd = words[Column::COMMAND].tr(')(', '')
       @ch_guest = words[Column::CHILD_GUEST].to_i
       @ch_kernel = words[Column::CHILD_KERNEL].to_i
       @ch_user = words[Column::CHILD_USER].to_i
+      @resident_set_pages = words[Column::RESIDENT_SET_SIZE].to_i
       @se_guest = words[Column::SELF_GUEST].to_i
       @se_kernel = words[Column::SELF_KERNEL].to_i
       @se_user = words[Column::SELF_USER].to_i
+      @start_time = words[Column::START_TIME].to_i
+      @threads = words[Column::THREADS].to_i
       @tot_guest = @ch_guest + @se_guest
       @tot_kernel = @ch_kernel + @se_kernel
       @tot_user = @ch_user + @se_user
+      @virtual_mem_bytes = words[Column::VMEM_SIZE].to_i
     end
 
     def to_s
@@ -108,6 +128,16 @@ tot_usr: #{tot_user}
 "
     end
 
+  end
+
+  # ensures we're tracking a given pid with all our handlers.  If
+  # the pid is tracked already, this is a no-op
+  def self.init(pid, data=nil)
+    @@stats[pid] = Stat.new(pid, data)  unless @@stats[pid]
+  end
+
+  def self.report(pid)
+    @@stats[pid].report
   end
 
 end

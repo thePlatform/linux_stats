@@ -21,7 +21,7 @@ module Procstat
     end
   end
   module PID
-    module Procstat
+    module PidStat
     end
   end
 

@@ -16,18 +16,16 @@ PID_INDEX = 2
 
 module Procstat::PID
 
-  def self.report(process_names)
+  def self.report(friendly_name, regex)
     ret = {}
-    process_names.each do |process_name|
-      process_pids = pids process_name
-      ret[process_name] = {}
-      ret[process_name][:count] = process_pids.size
-      process_pids.each do |pid|
-        stat = Procstat::Stat.new(pid)
-        ret[process_name][pid] = stat.report
-        # TODO -- other data processors go here
-      end
+    process_pids = pids regex
+    ret[friendly_name] = {}
+    ret[friendly_name][:count] = process_pids.size
+    process_pids.each do |pid|
+      PidStat.init pid
+      ret[friendly_name].merge! PidStat.report pid
     end
+    #ret.merge! PidStat.rollup
     ret
   end
 
@@ -39,5 +37,4 @@ module Procstat::PID
     end
     pid_list
   end
-
 end

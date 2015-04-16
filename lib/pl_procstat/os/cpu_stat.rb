@@ -148,4 +148,3 @@ module Procstat::OS::CPU
 end
 
 Procstat::OS::CPU.init
-

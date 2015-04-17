@@ -18,16 +18,19 @@ module Procstat::PID::PidStat
 
   @@stats={}
 
-  # TODO: this value is almost universally 100, but we ought to derive it via sysconf(_SC_CLK_TCK)
-  JIFFIES_PERSEC = 100.0
-  PAGE_SIZE_BYTES = `getconf PAGESIZE`.to_i
 
   class Stat
 
-    attr_accessor :pid
+    attr_accessor :boot_time,
+                  :jiffies_per_sec,
+                  :page_size_bytes,
+                  :pid
 
     def initialize(pid, data=nil)
       @pid = pid
+      @boot_time = read_boot_time
+      @jiffies_per_sec = `getconf CLK_TCK`.to_f
+      @page_size_bytes = `getconf PAGESIZE`.to_i
       set_stats data
     end
 
@@ -41,9 +44,8 @@ module Procstat::PID::PidStat
       prev_timestamp = @current_timestamp
       set_stats data
       elapsed_seconds = @current_timestamp - prev_timestamp
-      elapsed_jiffies = JIFFIES_PERSEC * elapsed_seconds
+      elapsed_jiffies = jiffies_per_sec * elapsed_seconds
       ret = {}
-      ret[:name] = "#{@current_stats.cmd}_#{pid}"
       # puts "current: #{@current_stats}"
       # puts "pref: #{prev_stats}"
       ret[:cpu] = {}
@@ -65,12 +67,23 @@ module Procstat::PID::PidStat
           user_pct: proc_child[:user_pct] + proc_self[:user_pct],
       }
       ret[:mem] = {
-          resident_set_bytes: @current_stats.resident_set_pages * PAGE_SIZE_BYTES,
+          resident_set_bytes: @current_stats.resident_set_pages * page_size_bytes,
           virtual_mem_bytes: @current_stats.virtual_mem_bytes
       }
       ret[:threads] = @current_stats.threads
+      start_time = @current_stats.start_time/jiffies_per_sec + boot_time
+      ret[:age_seconds] = Time.now.to_i - start_time
       ret
     end
+
+    private
+
+    def read_boot_time
+      File.readlines('/proc/stat').each do |line|
+        return line.split[1].to_i if line =~ /^btime/
+      end
+    end
+
   end
 
   class PidStatData
@@ -92,9 +105,9 @@ module Procstat::PID::PidStat
                   :virtual_mem_bytes
 
     def initialize(pid, data=nil)
-      puts "data nil? #{data.nil?}"
+      #puts "data nil? #{data.nil?}"
       data = File.read("/proc/#{pid}/stat") unless data
-      puts "Data: #{data}"
+      #puts "Data: #{data}"
       words = data.split
       @cmd = words[Column::COMMAND].tr(')(', '')
       @ch_guest = words[Column::CHILD_GUEST].to_i

@@ -23,6 +23,7 @@ module Procstat::PID
     ret[friendly_name][:count] = process_pids.size
     process_pids.each do |pid|
       PidStat.init pid
+      #PidStat.record pid
       ret[friendly_name].merge! PidStat.report pid
     end
     #ret.merge! PidStat.rollup

@@ -10,14 +10,17 @@ require 'pp'
 # for the stats library.
 
 DEFAULT_DELAY_SEC = 1
-DEFAULT_ITERATIONS = 5
+DEFAULT_ITERATIONS = 4
 
+PROCESS_FRIENDLY_NAME = 'bash'
+#PROCESS_FRIENDLY_NAME = 'java'
 #PROCESS_FRIENDLY_NAME = 'chrome'
-PROCESS_FRIENDLY_NAME = 'gnome_terminal'
+#PROCESS_FRIENDLY_NAME = 'gnome terminal'
 
-#PROCESS_REGEX = 'bash'
+PROCESS_REGEX = 'bash'
+#PROCESS_REGEX = 'java'
 #PROCESS_REGEX = 'gnome-term'
-PROCESS_REGEX = 'chrome'
+#PROCESS_REGEX = 'chrome'
 
 delay_sec = ARGV[0] ? ARGV[0].to_i : DEFAULT_DELAY_SEC
 iterations = ARGV[1] ? ARGV[1].to_i : DEFAULT_ITERATIONS

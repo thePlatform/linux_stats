@@ -20,13 +20,11 @@ module Procstat::PID
     ret = {}
     process_pids = pids regex
     ret[friendly_name] = {}
-    ret[friendly_name][:count] = process_pids.size
+    ret[friendly_name][:process_count] = process_pids.size
     process_pids.each do |pid|
-      PidStat.init pid
-      #PidStat.record pid
-      ret[friendly_name].merge! PidStat.report pid
+      PidStat.record pid
     end
-    #ret.merge! PidStat.rollup
+    ret[friendly_name].merge! PidStat.report
     ret
   end
 

@@ -16,7 +16,7 @@ module Procstat::PID::PidStat
     VMEM_SIZE = 22
   end
 
-  @@stats={}
+  @@pid_stats_map={}
 
 
   class Stat
@@ -24,7 +24,9 @@ module Procstat::PID::PidStat
     attr_accessor :boot_time,
                   :jiffies_per_sec,
                   :page_size_bytes,
+                  :perf_detail,
                   :pid
+
 
     def initialize(pid, data=nil)
       @pid = pid
@@ -39,41 +41,38 @@ module Procstat::PID::PidStat
       @current_timestamp = Time.now()
     end
 
-    def report(data=nil)
+    def record(data=nil)
       prev_stats = @current_stats
       prev_timestamp = @current_timestamp
       set_stats data
       elapsed_seconds = @current_timestamp - prev_timestamp
       elapsed_jiffies = jiffies_per_sec * elapsed_seconds
-      ret = {}
-      # puts "current: #{@current_stats}"
-      # puts "pref: #{prev_stats}"
-      ret[:cpu] = {}
+      @perf_detail = {}
+      @perf_detail[:cpu] = {}
       proc_self = {
           guest_pct: 100.0*(@current_stats.se_guest - prev_stats.se_guest)/elapsed_jiffies,
           kern_pct: 100.0*(@current_stats.se_kernel - prev_stats.se_kernel)/elapsed_jiffies,
           user_pct: 100.0*(@current_stats.se_user - prev_stats.se_user)/elapsed_jiffies
       }
-      ret[:cpu][:self] = proc_self
+      @perf_detail[:cpu][:self] = proc_self
       proc_child = {
           guest_pct: 100.0*(@current_stats.ch_guest - prev_stats.ch_guest)/elapsed_jiffies,
           kern_pct: 100.0*(@current_stats.ch_kernel - prev_stats.ch_kernel)/elapsed_jiffies,
           user_pct: 100.0*(@current_stats.ch_user - prev_stats.ch_user)/elapsed_jiffies
       }
-      ret[:cpu][:child] = proc_child
-      ret[:cpu][:total] = {
+      @perf_detail[:cpu][:child] = proc_child
+      @perf_detail[:cpu][:total] = {
           guest_pct: proc_child[:guest_pct] + proc_self[:guest_pct],
           kern_pct: proc_child[:kern_pct] + proc_self[:kern_pct],
           user_pct: proc_child[:user_pct] + proc_self[:user_pct],
       }
-      ret[:mem] = {
+      @perf_detail[:mem] = {
           resident_set_bytes: @current_stats.resident_set_pages * page_size_bytes,
           virtual_mem_bytes: @current_stats.virtual_mem_bytes
       }
-      ret[:threads] = @current_stats.threads
+      @perf_detail[:threads] = @current_stats.threads
       start_time = @current_stats.start_time/jiffies_per_sec + boot_time
-      ret[:age_seconds] = Time.now.to_i - start_time
-      ret
+      @perf_detail[:age_seconds] = Time.now.to_i - start_time
     end
 
     private
@@ -125,32 +124,39 @@ module Procstat::PID::PidStat
       @virtual_mem_bytes = words[Column::VMEM_SIZE].to_i
     end
 
-    def to_s
-      "
-cmd: #{cmd}
-ch_guest: #{ch_guest}
-ch_kern: #{ch_kernel}
-ch_user: #{ch_user}
-se_guest: #{se_guest}
-se_kern: #{se_kernel}
-se_usr: #{se_user}
-tot_guest: #{tot_guest}
-tod_kern: #{tot_kernel}
-tot_usr: #{tot_user}
+  end
 
-"
+  # gather performance data for a single PID
+  def self.record(pid, data=nil)
+    @@pid_stats_map[pid] = Stat.new(pid, data) unless @@pid_stats_map[pid]
+    @@pid_stats_map[pid].record
+  end
+
+  # Roll up the stats from individual PIDs into a summary
+  def self.report
+    ret = {}
+    return ret if @@pid_stats_map.size == 0
+    age_sec = 0
+    cpu_pct = 0
+    resident_set_bytes = 0
+    threads=0
+    virtual_mem_bytes = 0
+    @@pid_stats_map.each do |pid, stat|
+      age_sec += stat.perf_detail[:age_seconds]
+      threads += stat.perf_detail[:threads]
+      resident_set_bytes += stat.perf_detail[:mem][:resident_set_bytes]
+      virtual_mem_bytes += stat.perf_detail[:mem][:virtual_mem_bytes]
+      cpu_pct += stat.perf_detail[:cpu][:self][:user_pct]
+      cpu_pct += stat.perf_detail[:cpu][:self][:kern_pct]
+      cpu_pct += stat.perf_detail[:cpu][:self][:guest_pct]
     end
-
-  end
-
-  # ensures we're tracking a given pid with all our handlers.  If
-  # the pid is tracked already, this is a no-op
-  def self.init(pid, data=nil)
-    @@stats[pid] = Stat.new(pid, data)  unless @@stats[pid]
-  end
-
-  def self.report(pid)
-    @@stats[pid].report
+    ret[:age_seconds] = age_sec
+    ret[:threads] = threads
+    ret[:mem] = {}
+    ret[:mem][:resident_set_bytes] = resident_set_bytes
+    ret[:mem][:virtual_mem_bytes] = virtual_mem_bytes
+    ret[:cpu_pct] = cpu_pct
+    ret
   end
 
 end

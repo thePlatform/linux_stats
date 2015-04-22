@@ -9,8 +9,8 @@ require 'pp'
 # but its primary purpose is to provide an example client
 # for the stats library.
 
-DEFAULT_DELAY_SEC = 1
-DEFAULT_ITERATIONS = 4
+DEFAULT_DELAY_SEC = 2
+DEFAULT_ITERATIONS = 3
 
 PROCESS_FRIENDLY_NAME = 'bash'
 #PROCESS_FRIENDLY_NAME = 'java'

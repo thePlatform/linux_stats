@@ -30,12 +30,13 @@ module Procstat::OS::CPU
       @current_stats[:cpu].keys.each do |cpu_name|
         ret[:cpus][cpu_name] = @current_stats[:cpu][cpu_name].report(prev_stats[:cpu][cpu_name])
       end
-      ret[:interrupts_persec] =
+      ret[:os] = {}
+      ret[:os][:interrupts_persec] =
           (@current_stats[:interrupts] - prev_stats[:interrupts])/ elapsed_time
-      ret[:ctxt_switches_persec] =
+      ret[:os][:ctxt_switches_persec] =
           (@current_stats[:context_switches]-prev_stats[:context_switches]) / elapsed_time
-      ret[:procs_running] = @current_stats[:procs_running]
-      ret[:procs_blocked] = @current_stats[:procs_blocked]
+      ret[:os][:procs_running] = @current_stats[:procs_running]
+      ret[:os][:procs_blocked] = @current_stats[:procs_blocked]
       ret
     end
 

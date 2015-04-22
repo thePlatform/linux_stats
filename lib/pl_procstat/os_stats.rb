@@ -46,10 +46,14 @@ module Procstat::OS
     os_perf_stats[:partition_use] = Mounts.report
     os_perf_stats[:load_avg] = Loadavg.report
     os_perf_stats[:file_descriptor] = FileDescriptor.report
-    os_perf_stats[:cpu] = CPU.report
     os_perf_stats[:net] = NetBandwidth.report
     os_perf_stats[:net].merge! NetSocket.report
     os_perf_stats[:disk_io] = BlockIO.report
+
+    proc_stat_report = CPU.report
+    os_perf_stats[:cpu] = proc_stat_report[:cpus]
+    os_perf_stats[:os] = proc_stat_report[:os]
+
     os_perf_stats
   end
 

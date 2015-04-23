@@ -110,36 +110,6 @@ module Procstat::OS::BlockIO
       end
     end
 
-    # def disk_io
-    #   # execution time: 0.24 ms  [LOW]
-    #   all_disk_report = {}
-    #   disk_stats = {}
-    #   elapsed_time = Time.now - last_called_time
-    #   watched_disks.each do |disk_name|
-    #     data = File.read("/sys/block/#{disk_name}/stat")
-    #     stats = ThroughputData.new(data, bytes_per_disk_sector)
-    #     disk_stats[disk_name] = stats
-    #     disk_report = {}
-    #     disk_report[:in_progress] = stats.in_progress
-    #     if @last_disk_stats
-    #       last = @last_disk_stats[disk_name]
-    #       disk_report[:reads_persec] = (stats.reads - last.reads) / elapsed_time
-    #       disk_report[:writes_persec] = (stats.writes - last.writes) / elapsed_time
-    #       disk_report[:bytes_read_persec] = (stats.read_bytes - last.read_bytes) / elapsed_time
-    #       disk_report[:bytes_written_persec] = (stats.write_bytes - last.write_bytes) / elapsed_time
-    #       cpu_ms = elapsed_time * num_cpu * 1.25
-    #       pct_active = (stats.active_time_ms - last.active_time_ms) / cpu_ms
-    #       # pct_active is an approximation, which may occasionally be a bit over 100%.  We
-    #       # cap it here at 100 to avoid confusing users.
-    #       pct_active = 100 if pct_active > 100
-    #       disk_report[:percent_active] = pct_active
-    #     end
-    #     all_disk_report[disk_name] = disk_report
-    #   end
-    #   @last_disk_stats = disk_stats
-    #   all_disk_report
-    # end
-
   end
 
   class ThroughputData

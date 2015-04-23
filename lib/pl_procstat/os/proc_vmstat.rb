@@ -11,8 +11,6 @@ module Procstat::OS::Vmstat
 
   DATA_FILE = '/proc/vmstat'
 
-  # I think I like this pattern better than the one in cpu_stat.rb or sys_block_stat.rb.
-  # It reduces object creation and pulls boilerplate code out of os_stats.rb
   class Stat
     attr_accessor :current_stats, :current_timestamp
 

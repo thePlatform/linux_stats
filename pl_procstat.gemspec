@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['travis.bear@theplatform.com']
   spec.summary       = 'Lightweight OS stats extracted from /proc'
   spec.description   = 'Inspects the state of the system, reports stats'
-  spec.homepage      = 'http://theplatform.com'
+  spec.homepage      = 'http://theplatform.com' # TODO -- point me at github
   spec.license       = 'All rights reserved'
 
   spec.files         = Dir['lib/**/*.rb'] +

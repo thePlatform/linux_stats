@@ -1,0 +1,4 @@
+.idea*
+Gemfile.lock
+pl_*.gem
+

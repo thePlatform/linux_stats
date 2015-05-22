@@ -1,0 +1,18 @@
+
+Metrics/LineLength:
+  Max: 100
+
+Style/AlignHash:
+  EnforcedHashRocketStyle: key
+  EnforcedColonStyle: key
+
+Style/AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+
+Style/ClassAndModuleChildren:
+  EnforcedStyle: compact
+
+Metrics/ParameterLists:
+  Max: 4
+
+

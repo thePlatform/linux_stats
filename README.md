@@ -6,7 +6,7 @@ performance metrics.  It was originally developed to feed regular performance
 metrics into Graphite and Sensu.  However, it is a general-purpose tool that
 may be used for a variety of purposes.
 
-Two types of reporting is supported
+Two types of reporting are supported
 
 # OS-level statistics
 including
@@ -38,7 +38,7 @@ seem to rely on shelling out to native system tools as the basis for
 retrieving their underlying os.
 
 By going directly to /proc, we have a higher level of control of the type
-of os we make available.
+of data we make available.
 
 ## Compatibility
 pl_procstat was written specifically targeting Centos 5 & 6.  It's likely to work on other
@@ -68,6 +68,24 @@ Or install it yourself as:
 
 ## Usage
 
+# command line
+Example command line tools are provided to examine the output of
+the library
+
+ * os_stat
+ * pid_stat
+
+Usage:
+
+os_stat's usage is similar to sar
+ os_stat [delay_seconds] [iterations]
+
+pit_stat's usage is similar to sar, with the addition of a
+regex and friendly_name option
+  pid_stat [delay_seconds] [iterations] [regex] [friendly_name]
+
+
+# client library
 An example client for OS-level stats might look like this:
 ```ruby
 #!/usr/bin/env ruby
@@ -93,7 +111,6 @@ call to the current time.
 
 example output:
 ```
-
 {
   "memory": {
     "mem_total_kb": 1922208,

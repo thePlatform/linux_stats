@@ -22,6 +22,8 @@ PROCESS_REGEX = 'bash'
 #PROCESS_REGEX = 'gnome-term'
 #PROCESS_REGEX = 'chrome'
 
+# TODO: put regex and friendly name as command line args
+
 delay_sec = ARGV[0] ? ARGV[0].to_i : DEFAULT_DELAY_SEC
 iterations = ARGV[1] ? ARGV[1].to_i : DEFAULT_ITERATIONS
 

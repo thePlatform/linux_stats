@@ -1,14 +1,33 @@
 # pl_procstat
 
 ## Overview
-pl_procstat is a very lightweight, high-performance report generator for Linux
-performance metrics.  It was originally developed to feed performance
-metrics into Graphite and Sensu at regular intervals.  However, it is a general-purpose tool that may be used for a variety of purposes.
+pl_procstat is a lightweight, high-performance library for reporting on
+Linux performance metrics.  It was originally developed to generate data
+for Graphite and Sensu at regular intervals.  However since it is
+a general tool, it may be used for a variety of purposes.
 
-Two types of reporting are supported
+Other ruby tools exist for getting CPU os, etc.  These all seem
+to shell out to native system tools to get their data.  By staying
+in-process and going directly to the /proc filesystem, pl_procstat avoids
+the performance penalty of by shelling out, and is able to draw upon a rich
+set of data for its reports.
+
+pl_procstat provides two types of reporting: OS-level, and per-process.
+
+## Goals:
+
+ * Be as fast and lightweight as possible
+ * Gather all OS-level stats in 10 ms or less
+ * No shelling out to existing system tools (sar, vmstat, etc.) since we
+     don't want the expense of creating a new process.
+ * Provide useful statistics in the form of a sensible hash that clients
+     can inspect as desired.
+
+## Report types
 
 # OS-level statistics
-including
+OS level metrics include a broad collection of data points in different
+categories.
 
  * CPU use
  * Network use
@@ -18,35 +37,18 @@ including
  * Many more...
 
 # process-level statistics
-including
+pl_procstat also supports gathering data on individual or groups of
+Linux process.  Metrics include information on:
 
- * memory use
- * threads
- * cpu use
- * process count
+ * Memory use
+ * Thread counts
+ * CPU use
+ * Process counts
 
-
-## Goals:
-
- * be as fast and lightweight as possible
- * gather all OS-level stats in 10 ms or less
- * no shelling out to existing system tools (sar, vmstat, etc.) since we
-     don't want the expense of creating a new process.
- * provide useful statistics in the form of a sensible hash that clients
-     can inspect as desired.
-
-Other ruby tools exist for getting CPU os, etc.  Unfortunately they all
-seem to rely on shelling out to native system tools as the basis for
-retrieving their underlying os.
-
-By going directly to /proc, we have a higher level of control of the type
-of data we make available.
 
 ## Compatibility
-pl_procstat was written specifically targeting Centos 5 & 6.  It's likely to work on other
-platforms as well, but those configurations are untested.
-
-Want something? Send us a pull request.
+pl_procstat was written specifically targeting Centos 5 & 6.  It's likely
+to work on other platforms as well, but those configurations are untested.
 
 # Note
 Mac OS X is not supported.  pl_procstat gets its data by inspecting the
@@ -297,3 +299,7 @@ example output:
         "cpu_pct": 0.0
       }
     }
+
+## Contributing
+Got an idea for a new feature or mertic?  Send us a pull request against the develop
+branch!

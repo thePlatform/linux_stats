@@ -16,7 +16,7 @@ by spawning a new process
 collected to whatever is provided by the underlying tool.
 
 By staying in-process and going directly to the /proc filesystem,
-pl_procstat avoids the performance penalty of by shelling out,
+pl_procstat avoids the performance penalty of shelling out,
 and is able to draw upon the rich set of data provided by the Linux
 kernel.
 

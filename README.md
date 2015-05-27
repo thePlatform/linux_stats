@@ -206,13 +206,6 @@ example output:
           "bytes_read_persec": 100071.6266250863,
           "bytes_written_persec": 0.0,
           "percent_active": 41.69651109378596
-        },
-        "sdc": {
-          "reads_persec": 0.0,
-          "writes_persec": 0.0,
-          "bytes_read_persec": 0.0,
-          "bytes_written_persec": 0.0,
-          "percent_active": 0.0
         }
       },
       "cpu": {

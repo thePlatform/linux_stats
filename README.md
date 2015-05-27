@@ -2,30 +2,38 @@
 
 ## Overview
 pl_procstat is a lightweight, high-performance library for reporting on
-Linux performance metrics.  It was originally developed to generate data
-for Graphite and Sensu at regular intervals.  However since it is
-a general tool, it may be used for a variety of purposes.
+Linux performance metrics.  It was originally developed to feed data
+into Graphite and Sensu at regular intervals.  But since it is
+a general-purpose tool, it may be used for a variety of purposes.
 
-Other ruby tools exist for getting CPU os, etc.  These all seem
-to shell out to native system tools to get their data.  By staying
-in-process and going directly to the /proc filesystem, pl_procstat avoids
-the performance penalty of by shelling out, and is able to draw upon a rich
-set of data for its reports.
+Other ruby tools exist for getting similar OS data.  All the ones
+we reviewed shell out to native system tools to get their data.
+This approach has two drawbacks:
 
-pl_procstat provides two types of reporting: OS-level, and per-process.
+ * There is a fairly significant performance penalty incurred
+by spawning a new process
+ * Using external tools limits the flexibility on which metrics are
+collected to whatever is provided by the underlying tool.
+
+By staying in-process and going directly to the /proc filesystem,
+pl_procstat avoids the performance penalty of by shelling out,
+and is able to draw upon the rich set of data provided by the Linux
+kernel.
+
 
 ## Goals:
 
  * Be as fast and lightweight as possible
  * Gather all OS-level stats in 10 ms or less
- * No shelling out to existing system tools (sar, vmstat, etc.) since we
-     don't want the expense of creating a new process.
- * Provide useful statistics in the form of a sensible hash that clients
-     can inspect as desired.
+ * Provide useful statistics in the form of a sensibly-structured hash that 
+     clients can inspect as desired.
 
 ## Report types
 
-# OS-level statistics
+pl_procstat provides two types of reporting: OS-level, and per-process.
+
+
+### OS-level statistics
 OS level metrics include a broad collection of data points in different
 categories.
 
@@ -36,7 +44,7 @@ categories.
  * Memory Use
  * Many more...
 
-# process-level statistics
+### Process-level statistics
 pl_procstat also supports gathering data on individual or groups of
 Linux process.  Metrics include information on:
 
@@ -50,7 +58,7 @@ Linux process.  Metrics include information on:
 pl_procstat was written specifically targeting Centos 5 & 6.  It's likely
 to work on other platforms as well, but those configurations are untested.
 
-# Note
+### Note
 Mac OS X is not supported.  pl_procstat gets its data by inspecting the
 /proc filesystem, which does not exist on macs.
 
@@ -72,41 +80,41 @@ Or install it yourself as:
 
 ## Usage
 
-# command line
-Example command line tools are provided to examine the output of
-the library
+### Command line usage
+Example command line tools are included in the pl_procstat gem.  These
+tools show the types of metrics it's possible to collect with the library.
+These tools are:
 
  * os_stat
  * pid_stat
 
 Usage:
 
-os_stat's usage is similar to sar
+os_stat's usage is similar to sar, with all arguments being optional.
 
 ```
  os_stat [delay_seconds] [iterations]
 ```
 
-pid_stat's usage is similar to sar, with the addition of a regex and friendly_name option
+pid_stat's usage is similar to sar, with the addition of a regex and friendly_name option.  As with
+os_stat, all arguments are optional.
 
 ```
   pid_stat [delay_seconds] [iterations] [regex] [friendly_name]
 ```
 
-# client library
+### Client library usage
 An example client for OS-level stats might look like this:
 
     #!/usr/bin/env ruby
-    
+
     require 'pl_procstat'
     require 'json'
-    
-    DEFAULT_DELAY_SEC = 0.5
-    DEFAULT_ITERATIONS = 1
-    delay_sec = ARGV[0] ? ARGV[0].to_i : DEFAULT_DELAY_SEC
-    iterations = ARGV[1] ? ARGV[1].to_i : DEFAULT_ITERATIONS
-    iterations.times do
-      sleep(delay_sec)
+
+    DELAY_SEC = 1.5
+    ITERATIONS = 3
+    ITERATIONS.times do
+      sleep(DELAY_SEC)
       report = Procstat::OS.report
       puts JSON.pretty_generate report
     end
@@ -138,20 +146,10 @@ example output:
           "available_kb": 5398564,
           "used_pct": 32.50883869322359
         },
-        "/dev": {
-          "total_kb": 950268,
-          "available_kb": 950080,
-          "used_pct": 0.019783892544000814
-        },
         "/dev/shm": {
           "total_kb": 961104,
           "available_kb": 961104,
           "used_pct": 0.0
-        },
-        "/app": {
-          "total_kb": 5225040,
-          "available_kb": 4818048,
-          "used_pct": 7.789260943456888
         },
         "/boot": {
           "total_kb": 378252,
@@ -167,11 +165,6 @@ example output:
           "total_kb": 1032088,
           "available_kb": 938208,
           "used_pct": 9.09612358636085
-        },
-        "/var": {
-          "total_kb": 5225040,
-          "available_kb": 4501608,
-          "used_pct": 13.845482522621833
         },
         "/var/log": {
           "total_kb": 20158332,
@@ -272,16 +265,13 @@ An example client for process-level stats might look like this:
     require 'pl_procstat'
     require 'json'
 
-    DEFAULT_DELAY_SEC = 2
-    DEFAULT_ITERATIONS = 3
-    PROCESS_FRIENDLY_NAME = 'gnome terminal'
-    PROCESS_REGEX = 'gnome-term'
-    delay_sec = ARGV[0] ? ARGV[0].to_i : DEFAULT_DELAY_SEC
-    iterations = ARGV[1] ? ARGV[1].to_i : DEFAULT_ITERATIONS
-    total_time = 0.0
+    delay_sec = 2
+    iterations = 3
+    friendly_name = 'gnome terminal'
+    regex = 'gnome-term'
     iterations.times do
       sleep(delay_sec)
-      report = Procstat::PID.report(PROCESS_FRIENDLY_NAME, PROCESS_REGEX)
+      report = Procstat::PID.report(friendly_name, regex)
       puts JSON.pretty_generate report
     end
 
@@ -301,5 +291,5 @@ example output:
     }
 
 ## Contributing
-Got an idea for a new feature or mertic?  Send us a pull request against the develop
+Got an idea for a new feature or metric?  Send us a pull request on the 'develop'
 branch!

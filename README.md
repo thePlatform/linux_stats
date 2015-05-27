@@ -6,9 +6,9 @@ Linux performance metrics.  It was originally developed to feed data
 into Graphite and Sensu at regular intervals.  But since it is
 a general-purpose tool, it may be used for a variety of purposes.
 
-Other ruby tools exist for getting similar OS data.  All the ones
-we reviewed shell out to native system tools to get their data.
-This approach has two drawbacks:
+Other ruby tools exist for getting similar OS data.  Each one
+we reviewed collects its data by shelling out to native system
+tools.  This approach has two drawbacks:
 
  * There is a fairly significant performance penalty incurred
 by spawning a new process

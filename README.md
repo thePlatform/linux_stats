@@ -1,7 +1,7 @@
-# pl_procstat
+# Linux Stats
 
 ## Overview
-pl_procstat is a lightweight, high-performance library for reporting on
+linux_stats is a lightweight, high-performance library for reporting on
 Linux performance metrics.  It was originally developed to feed data
 into Graphite and Sensu at regular intervals.  But since it is
 a general-purpose tool, it may be used for a variety of purposes.
@@ -16,7 +16,7 @@ by spawning a new process
 collected to whatever is provided by the underlying tool.
 
 By staying in-process and going directly to the /proc filesystem,
-pl_procstat avoids the performance penalty of shelling out,
+linux_stats avoids the performance penalty of shelling out,
 and is able to draw upon the rich set of data provided by the Linux
 kernel.
 
@@ -30,7 +30,7 @@ kernel.
 
 ## Report types
 
-pl_procstat provides two types of reporting: OS-level, and per-process.
+linux_stats provides two types of reporting: OS-level, and per-process.
 
 
 ### OS-level statistics
@@ -45,7 +45,7 @@ categories.
  * Many more...
 
 ### Process-level statistics
-pl_procstat also supports gathering data on individual or groups of
+linux_stats also supports gathering data on individual or groups of
 Linux process.  Metrics include information on:
 
  * Memory use
@@ -55,11 +55,11 @@ Linux process.  Metrics include information on:
 
 
 ## Compatibility
-pl_procstat was written specifically targeting Centos 5 & 6.  It's likely
+linux_stats was written specifically targeting Centos 5 & 6.  It's likely
 to work on other platforms as well, but those configurations are untested.
 
 ### Note
-Mac OS X is not supported.  pl_procstat gets its data by inspecting the
+Mac OS X is not supported.  linux_stats gets its data by inspecting the
 /proc filesystem, which does not exist on macs.
 
 ## Installation
@@ -81,7 +81,7 @@ Or install it yourself as:
 ## Usage
 
 ### Command line usage
-Example command line tools are included in the pl_procstat gem.  These
+Example command line tools are included in the linux_stats gem.  These
 tools show the types of metrics it's possible to collect with the library.
 These tools are:
 
@@ -108,20 +108,20 @@ An example client for OS-level stats might look like this:
 
     #!/usr/bin/env ruby
 
-    require 'pl_procstat'
+    require 'linux_stats'
     require 'json'
 
     DELAY_SEC = 1.5
     ITERATIONS = 3
     ITERATIONS.times do
       sleep(DELAY_SEC)
-      report = Procstat::OS.report
+      report = LinuxStats::OS.report
       puts JSON.pretty_generate report
     end
 
-The first call to Procstat::OS.report measures metrics cumulative
-from the time the procstat library was loaded. Successive calls to
-Procstat::OS.report measure metrics from the time of the previous
+The first call to LinuxStats::OS.report measures metrics cumulative
+from the time the LinuxStats library was loaded. Successive calls to
+LinuxStats::OS.report measure metrics from the time of the previous
 call to the current time.
 
 example output:
@@ -255,7 +255,7 @@ An example client for process-level stats might look like this:
 
     #!/usr/bin/env ruby
 
-    require 'pl_procstat'
+    require 'linux_stats'
     require 'json'
 
     delay_sec = 2
@@ -264,7 +264,7 @@ An example client for process-level stats might look like this:
     regex = 'gnome-term'
     iterations.times do
       sleep(delay_sec)
-      report = Procstat::PID.report(friendly_name, regex)
+      report = LinuxStats::PID.report(friendly_name, regex)
       puts JSON.pretty_generate report
     end
 
@@ -288,4 +288,4 @@ Got an idea for a new feature or metric?  Send us a pull request on the 'develop
 branch!
 
 ## License
-LinuxStats is provided under the MIT License.  See
+LinuxStats is provided under the MIT License.

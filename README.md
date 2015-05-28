@@ -286,3 +286,6 @@ example output:
 ## Contributing
 Got an idea for a new feature or metric?  Send us a pull request on the 'develop'
 branch!
+
+## License
+LinuxStats is provided under the MIT License.  See

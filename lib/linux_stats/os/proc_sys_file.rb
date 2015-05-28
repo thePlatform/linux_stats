@@ -1,3 +1,4 @@
+
 # The MIT License (MIT)
 #
 # Copyright (c) 2015 ThePlatform for Media
@@ -20,21 +21,31 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require 'linux_stats'
 
-Metrics/LineLength:
-  Max: 100
+# generates an OS-level report on file descriptor use, based on data in
+# /proc/sys/fs/file-nr
 
-Style/AlignHash:
-  EnforcedHashRocketStyle: key
-  EnforcedColonStyle: key
+module LinuxStats::OS::FileDescriptor
 
-Style/AlignParameters:
-  EnforcedStyle: with_fixed_indentation
+  DATA_FILE = '/proc/sys/fs/file-nr'
 
-Style/ClassAndModuleChildren:
-  EnforcedStyle: compact
+  # for description of file-nr info, see
+  # https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/5/html/Tuning_and_Optimizing_Red_Hat_Enterprise_Linux_for_Oracle_9i_and_10g_Databases/chap-Oracle_9i_and_10g_Tuning_Guide-Setting_File_Handles.html
 
-Metrics/ParameterLists:
-  Max: 4
-
-
+  def self.report(data=nil)
+    # execution time: 0.1 ms  [LOW]
+    file_descriptors = {}
+    data = File.read(DATA_FILE) unless data
+    words = data.split
+    allocated = words[0].to_i
+    available = words[1].to_i
+    # for kernels 2.4 and below, 'used' is just os[0].  We could detect kernel version
+    # from /proc/version and handle old versions, but Centos 5 and 6 all have kernels
+    # 2.6 and above
+    file_descriptors[:used] = allocated - available
+    file_descriptors[:max] = words[2].to_i
+    file_descriptors[:used_pct] = 100.0 * file_descriptors[:used]/file_descriptors[:max]
+    file_descriptors
+  end
+end

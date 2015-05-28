@@ -1,3 +1,4 @@
+
 # The MIT License (MIT)
 #
 # Copyright (c) 2015 ThePlatform for Media
@@ -20,21 +21,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require 'linux_stats/version'
 
-Metrics/LineLength:
-  Max: 100
+require 'linux_stats/os/cpu_stat'
+require 'linux_stats/os/proc_loadavg'
+require 'linux_stats/os/proc_meminfo'
+require 'linux_stats/os/proc_mounts'
+require 'linux_stats/os/proc_net_dev'
+require 'linux_stats/os/proc_net_sockstat'
+require 'linux_stats/os/proc_sys_file'
+require 'linux_stats/os/proc_vmstat'
+require 'linux_stats/os/sys_block_stat'
 
-Style/AlignHash:
-  EnforcedHashRocketStyle: key
-  EnforcedColonStyle: key
+require 'linux_stats/pid/pid_stat'
 
-Style/AlignParameters:
-  EnforcedStyle: with_fixed_indentation
-
-Style/ClassAndModuleChildren:
-  EnforcedStyle: compact
-
-Metrics/ParameterLists:
-  Max: 4
-
-
+require 'linux_stats/os_stats'
+require 'linux_stats/process_stats'

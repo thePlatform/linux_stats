@@ -21,36 +21,46 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+
 require 'linux_stats'
 
-MEMINFO_DATA = {
-    :mem_free => 5,
-    :mem_total => 10,
-    :page_cache => 202,
-    :swap_free => 8,
-    :swap_total => 10
-}
+module LinuxStats::OS::Meminfo
 
-include LinuxStats::OS
+  DATA_FILE = '/proc/meminfo'
+  MEM_FREE = 'MemFree'
+  MEM_TOTAL = 'MemTotal'
+  PAGE_CACHE = 'Cached'
+  SWAP_FREE = 'SwapFree'
+  SWAP_TOTAL = 'SwapTotal'
 
-MEMINFO_STRING = "
-something_we_don't_care_about 42
-#{Meminfo::MEM_FREE} #{MEMINFO_DATA[:mem_free]}
-#{Meminfo::MEM_TOTAL} #{MEMINFO_DATA[:mem_total]}
-#{Meminfo::PAGE_CACHE} #{MEMINFO_DATA[:page_cache]}
-#{Meminfo::SWAP_FREE} #{MEMINFO_DATA[:swap_free]}
-#{Meminfo::SWAP_TOTAL} #{MEMINFO_DATA[:swap_total]}
-something_else_to_ignore 1
-"
-
-describe 'ProcMeminfo module functions' do
-
-  # happy path
-  it 'should generate a good report' do
-    report = Meminfo.report(MEMINFO_STRING)
-    expect(report[:mem_free_kb]).to eq MEMINFO_DATA[:mem_free]
-    expect(report[:mem_total_kb]).to eq MEMINFO_DATA[:mem_total]
-    free_mem = MEMINFO_DATA[:mem_free].to_f/MEMINFO_DATA[:mem_total].to_f
-    expect(report[:mem_used_pct]).to eq 100.0*(1-free_mem)
+  def self.report(data=nil)
+    mem_report = {}
+    data = File.read(DATA_FILE) unless data
+    data.each_line do |line|
+      if line =~ /^#{MEM_TOTAL}/
+        #puts line.split[1], line.split[1].to_i
+        mem_report[:mem_total_kb] = line.split()[1].to_i
+        next
+      end
+      if line =~ /^#{MEM_FREE}/
+        mem_report[:mem_free_kb] = line.split()[1].to_i
+        next
+      end
+      if line =~ /^#{PAGE_CACHE}/
+        mem_report[:page_cache_kb] = line.split()[1].to_i
+        next
+      end
+      if line =~ /^#{SWAP_TOTAL}/
+        mem_report[:swap_total_kb] = line.split()[1].to_i
+        next
+      end
+      if line =~ /^#{SWAP_FREE}/
+        mem_report[:swap_free_kb] = line.split()[1].to_i
+        next
+      end
+    end
+    mem_report[:mem_used_pct] = 100 - 100.0 * mem_report[:mem_free_kb]/mem_report[:mem_total_kb]
+    mem_report[:swap_used_pct] = 100 - 100.0 * mem_report[:swap_free_kb]/mem_report[:swap_total_kb]
+    mem_report
   end
 end

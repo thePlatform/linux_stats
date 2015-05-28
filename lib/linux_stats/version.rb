@@ -1,3 +1,4 @@
+
 # The MIT License (MIT)
 #
 # Copyright (c) 2015 ThePlatform for Media
@@ -20,21 +21,31 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+module LinuxStats
+  VERSION = '0.2.3'
+end
 
-Metrics/LineLength:
-  Max: 100
+module LinuxStats
+  # new
+  module OS
+    module BlockIO
+    end
+    module Loadavg
+    end
+    module NetBandwidth
+    end
+    module NetSocket
+    end
+    module Meminfo
+    end
+    module ProcMounts
+    end
+    module Vmstat
+    end
+  end
+  module PID
+    module PidStat
+    end
+  end
 
-Style/AlignHash:
-  EnforcedHashRocketStyle: key
-  EnforcedColonStyle: key
-
-Style/AlignParameters:
-  EnforcedStyle: with_fixed_indentation
-
-Style/ClassAndModuleChildren:
-  EnforcedStyle: compact
-
-Metrics/ParameterLists:
-  Max: 4
-
-
+end

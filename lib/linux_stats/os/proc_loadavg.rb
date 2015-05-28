@@ -1,3 +1,4 @@
+
 # The MIT License (MIT)
 #
 # Copyright (c) 2015 ThePlatform for Media
@@ -21,20 +22,23 @@
 # THE SOFTWARE.
 
 
-Metrics/LineLength:
-  Max: 100
+require 'linux_stats'
 
-Style/AlignHash:
-  EnforcedHashRocketStyle: key
-  EnforcedColonStyle: key
+# generates a report on the 1,5, and 15 minute load average based on
+# data in the /proc/loadavg file
 
-Style/AlignParameters:
-  EnforcedStyle: with_fixed_indentation
+module LinuxStats::OS::Loadavg
 
-Style/ClassAndModuleChildren:
-  EnforcedStyle: compact
+  DATA_FILE = '/proc/loadavg'
 
-Metrics/ParameterLists:
-  Max: 4
-
-
+  def self.report(data=nil)
+    # execution time: 0.12 ms  [LOW]
+    load_report = {}
+    data = File.read(DATA_FILE) unless data
+    words=data.split
+    load_report[:one] = words[0].to_f
+    load_report[:five] = words[1].to_f
+    load_report[:fifteen] = words[2].to_f
+    load_report
+  end
+end

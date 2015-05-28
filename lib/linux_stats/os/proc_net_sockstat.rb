@@ -1,3 +1,4 @@
+
 # The MIT License (MIT)
 #
 # Copyright (c) 2015 ThePlatform for Media
@@ -20,21 +21,31 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+require 'linux_stats'
 
-Metrics/LineLength:
-  Max: 100
+# generates a report on the 1,5, and 15 minute load average based on
+# data in the /proc/loadavg file
 
-Style/AlignHash:
-  EnforcedHashRocketStyle: key
-  EnforcedColonStyle: key
+module LinuxStats::OS::NetSocket
 
-Style/AlignParameters:
-  EnforcedStyle: with_fixed_indentation
+  DATA_FILE = '/proc/net/sockstat'
 
-Style/ClassAndModuleChildren:
-  EnforcedStyle: compact
+  module Column
+    OPEN_CONNECTIONS = 2
+    TIME_WAIT_CONNECTIONS = 6
+  end
 
-Metrics/ParameterLists:
-  Max: 4
+  def self.report(data=nil)
+    ret = {}
+    data = File.read(DATA_FILE) unless data
+    data.each_line do |line|
+      if line =~ /^TCP/
+        words = line.split()
+        ret[:tcp_open_conn] = words[Column::OPEN_CONNECTIONS].to_i
+        ret[:tcp_timewait_conn] = words[Column::TIME_WAIT_CONNECTIONS].to_i
+      end
+    end
+    ret
+  end
 
-
+end

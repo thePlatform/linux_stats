@@ -1,3 +1,4 @@
+
 # The MIT License (MIT)
 #
 # Copyright (c) 2015 ThePlatform for Media
@@ -20,21 +21,30 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+require 'linux_stats/version'
 
-Metrics/LineLength:
-  Max: 100
+Gem::Specification.new do |spec|
+  spec.name          = 'linux_stats'
+  spec.version       = LinuxStats::VERSION
+  spec.authors       = ['Travis Bear']
+  spec.email         = ['travis.bear@theplatform.com']
+  spec.summary       = 'Lightweight OS stats extracted from /proc'
+  spec.description   = 'Inspects the state of the system, reports stats'
+  spec.homepage      = 'http://theplatform.com' # TODO -- point me at github
+  spec.license       = 'All rights reserved'
 
-Style/AlignHash:
-  EnforcedHashRocketStyle: key
-  EnforcedColonStyle: key
+  spec.files         = Dir['lib/**/*.rb'] +
+      Dir['README.md'] +
+      Dir['bin/**/*'] +
+      Dir['docs/**/*'] -
+      Dir['**/*~']
+  spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
+  spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
+  spec.require_paths = ['lib']
 
-Style/AlignParameters:
-  EnforcedStyle: with_fixed_indentation
-
-Style/ClassAndModuleChildren:
-  EnforcedStyle: compact
-
-Metrics/ParameterLists:
-  Max: 4
-
-
+  spec.add_development_dependency 'bundler', '~> 1.7'
+  spec.add_development_dependency 'rake', '~> 10.0'
+  spec.add_development_dependency 'rspec', '= 3.1.0'
+end

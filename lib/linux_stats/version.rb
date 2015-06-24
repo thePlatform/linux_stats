@@ -47,5 +47,4 @@ module LinuxStats
     module PidStat
     end
   end
-
 end

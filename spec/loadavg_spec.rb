@@ -24,9 +24,9 @@
 require 'linux_stats'
 
 LOAD = {
-    :one => 1.11,
-    :five => 5.55,
-    :fifteen => 15.15,
+  one:  1.11,
+  five: 5.55,
+  fifteen: 15.15
 }
 
 include LinuxStats::OS
@@ -36,7 +36,6 @@ LOAD_STRING = "#{LOAD[:one]} #{LOAD[:five]} #{LOAD[:fifteen]}"
 include LinuxStats::OS
 
 describe 'Load Average module functions' do
-
   # happy path
   it 'should generate a good report' do
     report = Loadavg.report(LOAD_STRING)

@@ -27,7 +27,6 @@ require 'linux_stats'
 # data in the /proc/loadavg file
 
 module LinuxStats::OS::NetSocket
-
   DATA_FILE = '/proc/net/sockstat'
 
   module Column
@@ -35,17 +34,15 @@ module LinuxStats::OS::NetSocket
     TIME_WAIT_CONNECTIONS = 6
   end
 
-  def self.report(data=nil)
+  def self.report(data = nil)
     ret = {}
     data = File.read(DATA_FILE) unless data
     data.each_line do |line|
-      if line =~ /^TCP/
-        words = line.split()
-        ret[:tcp_open_conn] = words[Column::OPEN_CONNECTIONS].to_i
-        ret[:tcp_timewait_conn] = words[Column::TIME_WAIT_CONNECTIONS].to_i
-      end
+      next unless line =~ /^TCP/
+      words = line.split()
+      ret[:tcp_open_conn] = words[Column::OPEN_CONNECTIONS].to_i
+      ret[:tcp_timewait_conn] = words[Column::TIME_WAIT_CONNECTIONS].to_i
     end
     ret
   end
-
 end

@@ -30,7 +30,6 @@ SUMMARY_CPU_DATA = 'cpu 2533647 9153 430212 109730676 569761 18858 73181 0 0'
 include LinuxStats::OS::CPU
 
 describe 'CPUData container class' do
-
   it 'should rename "cpu" to "all"' do
     cpu_stat = CPUData.new(SUMMARY_CPU_DATA)
     expect(cpu_stat.name).to eq 'all'
@@ -39,25 +38,22 @@ describe 'CPUData container class' do
   it 'should parse Centos 5 os' do
     cpu_stat = CPUData.new(CENTOS_5_CPU_DATA)
     expect(cpu_stat.name).to eq 'cpu1'
-    expect(cpu_stat.user).to eq 53054583
+    expect(cpu_stat.user).to eq 53_054_583
     expect(cpu_stat.nice).to eq 690
   end
 
   it 'should parse Centos 6 os' do
     cpu_stat = CPUData.new(CENTOS_6_CPU_DATA)
     expect(cpu_stat.name).to eq 'cpu0'
-    expect(cpu_stat.user).to eq 2533647
-    expect(cpu_stat.iowait).to eq 569761
+    expect(cpu_stat.user).to eq 2_533_647
+    expect(cpu_stat.iowait).to eq 569_761
   end
-
 end
 
-
 describe 'CPU::Stat reporting class' do
-# TODO
+  # TODO
 end
 
 describe 'Module methods' do
   # TODO
 end
-

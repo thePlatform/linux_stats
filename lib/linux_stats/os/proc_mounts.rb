@@ -26,13 +26,12 @@ require 'linux_stats'
 # Discovers the mounted partitions on the filesystem and
 # reports on space used.
 module LinuxStats::OS::Mounts
-
   IGNORE_PARTITIONS = [
-      'docker',
-      '^\/proc',
-      '^\/run',
-      '^\/sys',
-      '^\/cgroup'
+    'docker',
+    '^\/proc',
+    '^\/run',
+    '^\/sys',
+    '^\/cgroup'
   ]
 
   module DataFile
@@ -48,22 +47,22 @@ module LinuxStats::OS::Mounts
       storage_report[partition][:total_kb] = usage[0]
       storage_report[partition][:available_kb] = usage[1]
       unless usage[0] == 0
-        storage_report[partition][:used_pct] = 100.0 * (1-usage[1].to_f / usage[0].to_f)
+        storage_report[partition][:used_pct] = 100.0 * (1 - usage[1].to_f / usage[0].to_f)
       end
     end
     storage_report
   end
 
-# see https://www.ruby-forum.com/topic/4416522
-# returns: array of partition use: [
-#   <used kilobytes>
-#   <max kilobytes>
-# ]
+  # see https://www.ruby-forum.com/topic/4416522
+  # returns: array of partition use: [
+  #   <used kilobytes>
+  #   <max kilobytes>
+  # ]
   def self.partition_used(partition)
-    b=' '*128
+    b = ' ' * 128
     syscall(137, partition, b)
-    a=b.unpack('QQQQQ')
-    [a[2]*@@blocks_per_kilobyte, a[4]*@@blocks_per_kilobyte]
+    a = b.unpack('QQQQQ')
+    [a[2] * @@blocks_per_kilobyte, a[4] * @@blocks_per_kilobyte]
   end
 
   def self.mounts

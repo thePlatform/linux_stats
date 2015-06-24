@@ -23,18 +23,18 @@
 
 require 'linux_stats'
 
-PIDSTAT_VARS= {
-    cmd: 'chrome',
-    child_guest: 100,
-    child_kernel: 200,
-    child_user: 400,
-    rss: 101010,
-    self_guest: 200,
-    self_kernel: 300,
-    self_user: 350,
-    start_time: Time.now.to_i - 100,
-    threads: 10,
-    vmem: 20202020
+PIDSTAT_VARS = {
+  cmd: 'chrome',
+  child_guest: 100,
+  child_kernel: 200,
+  child_user: 400,
+  rss: 101_010,
+  self_guest: 200,
+  self_kernel: 300,
+  self_user: 350,
+  start_time: Time.now.to_i - 100,
+  threads: 10,
+  vmem: 20_202_020
 }
 
 # 5 per line to make the persnickety counting easier
@@ -54,7 +54,6 @@ PIDSTAT_STRING = "
 include LinuxStats::PID::PidStat
 
 describe 'PidStatData' do
-
   it 'should initialize with the correct command line name' do
     p = PidStatData.new(4242, PIDSTAT_STRING)
     expect(p.cmd).to eq PIDSTAT_VARS[:cmd]

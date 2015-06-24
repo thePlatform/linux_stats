@@ -37,4 +37,15 @@ Style/ClassAndModuleChildren:
 Metrics/ParameterLists:
   Max: 4
 
+Metrics/MethodLength:
+  CountComments: false
+  Max: 15
 
+Documentation:
+    Enabled: false
+
+Style/ClassAndModuleChildren:
+  EnforcedStyle: compact
+
+Metrics/AbcSize:
+  Max: 21

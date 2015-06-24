@@ -24,7 +24,6 @@
 require 'linux_stats'
 
 module LinuxStats::PID::PidStat
-
   module Column
     CHILD_GUEST = 43
     CHILD_KERNEL = 16
@@ -40,20 +39,17 @@ module LinuxStats::PID::PidStat
   end
 
   # maps PIDS to LinuxStats::PID::PidStat::Stat objects
-  @@pid_stats_map={}
-
+  @@pid_stats_map = {}
 
   # Given a PidStatData instance, calculates additional time-based metrics
   class Stat
-
     attr_accessor :boot_time,
                   :jiffies_per_sec,
                   :page_size_bytes,
                   :perf_detail,
                   :pid
 
-
-    def initialize(pid, data=nil)
+    def initialize(pid, data = nil)
       @pid = pid
       @boot_time = read_boot_time
       @jiffies_per_sec = `getconf CLK_TCK`.to_f
@@ -61,12 +57,12 @@ module LinuxStats::PID::PidStat
       set_stats data
     end
 
-    def set_stats(data=nil)
+    def set_stats(data = nil)
       @current_stats = PidStatData.new(@pid, data)
-      @current_timestamp = Time.now()
+      @current_timestamp = Time.now
     end
 
-    def record(data=nil)
+    def record(data = nil)
       prev_stats = @current_stats
       prev_timestamp = @current_timestamp
       set_stats data
@@ -75,28 +71,28 @@ module LinuxStats::PID::PidStat
       @perf_detail = {}
       @perf_detail[:cpu] = {}
       proc_self = {
-          guest_pct: 100.0*(@current_stats.se_guest - prev_stats.se_guest)/elapsed_jiffies,
-          kern_pct: 100.0*(@current_stats.se_kernel - prev_stats.se_kernel)/elapsed_jiffies,
-          user_pct: 100.0*(@current_stats.se_user - prev_stats.se_user)/elapsed_jiffies
+        guest_pct: 100.0 * (@current_stats.se_guest - prev_stats.se_guest) / elapsed_jiffies,
+        kern_pct: 100.0 * (@current_stats.se_kernel - prev_stats.se_kernel) / elapsed_jiffies,
+        user_pct: 100.0 * (@current_stats.se_user - prev_stats.se_user) / elapsed_jiffies
       }
       @perf_detail[:cpu][:self] = proc_self
       proc_child = {
-          guest_pct: 100.0*(@current_stats.ch_guest - prev_stats.ch_guest)/elapsed_jiffies,
-          kern_pct: 100.0*(@current_stats.ch_kernel - prev_stats.ch_kernel)/elapsed_jiffies,
-          user_pct: 100.0*(@current_stats.ch_user - prev_stats.ch_user)/elapsed_jiffies
+        guest_pct: 100.0 * (@current_stats.ch_guest - prev_stats.ch_guest) / elapsed_jiffies,
+        kern_pct: 100.0 * (@current_stats.ch_kernel - prev_stats.ch_kernel) / elapsed_jiffies,
+        user_pct: 100.0 * (@current_stats.ch_user - prev_stats.ch_user) / elapsed_jiffies
       }
       @perf_detail[:cpu][:child] = proc_child
       @perf_detail[:cpu][:total] = {
-          guest_pct: proc_child[:guest_pct] + proc_self[:guest_pct],
-          kern_pct: proc_child[:kern_pct] + proc_self[:kern_pct],
-          user_pct: proc_child[:user_pct] + proc_self[:user_pct],
+        guest_pct: proc_child[:guest_pct] + proc_self[:guest_pct],
+        kern_pct: proc_child[:kern_pct] + proc_self[:kern_pct],
+        user_pct: proc_child[:user_pct] + proc_self[:user_pct]
       }
       @perf_detail[:mem] = {
-          resident_set_bytes: @current_stats.resident_set_pages * page_size_bytes,
-          virtual_mem_bytes: @current_stats.virtual_mem_bytes
+        resident_set_bytes: @current_stats.resident_set_pages * page_size_bytes,
+        virtual_mem_bytes: @current_stats.virtual_mem_bytes
       }
       @perf_detail[:threads] = @current_stats.threads
-      start_time = @current_stats.start_time/jiffies_per_sec + boot_time
+      start_time = @current_stats.start_time / jiffies_per_sec + boot_time
       @perf_detail[:age_seconds] = Time.now.to_i - start_time
     end
 
@@ -107,13 +103,11 @@ module LinuxStats::PID::PidStat
         return line.split[1].to_i if line =~ /^btime/
       end
     end
-
   end
 
   # object to hold performance statistics for a single pid, derived from
   # /proc/<pid>/stat
   class PidStatData
-
     attr_accessor :ch_guest,
                   :ch_kernel,
                   :ch_user,
@@ -130,10 +124,10 @@ module LinuxStats::PID::PidStat
                   :tot_user,
                   :virtual_mem_bytes
 
-    def initialize(pid, data=nil)
-      #puts "data nil? #{data.nil?}"
+    def initialize(pid, data = nil)
+      # puts "data nil? #{data.nil?}"
       data = File.read("/proc/#{pid}/stat") unless data
-      #puts "Data: #{data}"
+      # puts "Data: #{data}"
       words = data.split
       @cmd = words[Column::COMMAND].tr(')(', '')
       @ch_guest = words[Column::CHILD_GUEST].to_i
@@ -150,13 +144,10 @@ module LinuxStats::PID::PidStat
       @tot_user = @ch_user + @se_user
       @virtual_mem_bytes = words[Column::VMEM_SIZE].to_i
     end
-
   end
-
 
   # One reporter instance will be assigned
   class Reporter
-
     attr_accessor :pid_stats_map
 
     def initialize
@@ -164,7 +155,7 @@ module LinuxStats::PID::PidStat
     end
 
     # gather performance data for a single PID
-    def record(pid, data=nil)
+    def record(pid, data = nil)
       pid_stats_map[pid] = Stat.new(pid, data) unless pid_stats_map[pid]
       pid_stats_map[pid].record
     end
@@ -176,9 +167,9 @@ module LinuxStats::PID::PidStat
       age_sec = 0
       cpu_pct = 0
       resident_set_bytes = 0
-      threads=0
+      threads = 0
       virtual_mem_bytes = 0
-      pid_stats_map.each do |pid, stat|
+      pid_stats_map.each do |_pid, stat|
         age_sec += stat.perf_detail[:age_seconds]
         threads += stat.perf_detail[:threads]
         resident_set_bytes += stat.perf_detail[:mem][:resident_set_bytes]

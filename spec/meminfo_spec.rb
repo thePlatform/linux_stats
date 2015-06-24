@@ -24,11 +24,11 @@
 require 'linux_stats'
 
 MEMINFO_DATA = {
-    :mem_free => 5,
-    :mem_total => 10,
-    :page_cache => 202,
-    :swap_free => 8,
-    :swap_total => 10
+  mem_free: 5,
+  mem_total: 10,
+  page_cache: 202,
+  swap_free: 8,
+  swap_total: 10
 }
 
 include LinuxStats::OS
@@ -44,13 +44,12 @@ something_else_to_ignore 1
 "
 
 describe 'ProcMeminfo module functions' do
-
   # happy path
   it 'should generate a good report' do
     report = Meminfo.report(MEMINFO_STRING)
     expect(report[:mem_free_kb]).to eq MEMINFO_DATA[:mem_free]
     expect(report[:mem_total_kb]).to eq MEMINFO_DATA[:mem_total]
-    free_mem = MEMINFO_DATA[:mem_free].to_f/MEMINFO_DATA[:mem_total].to_f
-    expect(report[:mem_used_pct]).to eq 100.0*(1-free_mem)
+    free_mem = MEMINFO_DATA[:mem_free].to_f / MEMINFO_DATA[:mem_total].to_f
+    expect(report[:mem_used_pct]).to eq 100.0 * (1 - free_mem)
   end
 end

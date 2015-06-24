@@ -21,7 +21,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-
 require 'linux_stats'
 
 # process_stats.rb
@@ -39,7 +38,6 @@ require 'linux_stats'
 PID_INDEX = 2
 
 module LinuxStats::PID
-
   # keeps a different reporter for each regex
   @@report_map = {}
 

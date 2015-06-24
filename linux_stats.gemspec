@@ -32,14 +32,14 @@ Gem::Specification.new do |spec|
   spec.email         = ['travis.bear@theplatform.com']
   spec.summary       = 'Lightweight OS stats extracted from /proc'
   spec.description   = 'Inspects the state of the system, reports stats'
-  spec.homepage      = 'http://theplatform.com' # TODO -- point me at github
+  spec.homepage      = 'http://theplatform.com' # TODO: point me at github
   spec.license       = 'All rights reserved'
 
   spec.files         = Dir['lib/**/*.rb'] +
-      Dir['README.md'] +
-      Dir['bin/**/*'] +
-      Dir['docs/**/*'] -
-      Dir['**/*~']
+    Dir['README.md'] +
+    Dir['bin/**/*'] +
+    Dir['docs/**/*'] -
+    Dir['**/*~']
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ['lib']

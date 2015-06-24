@@ -33,7 +33,7 @@ module LinuxStats::OS::FileDescriptor
   # for description of file-nr info, see
   # https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/5/html/Tuning_and_Optimizing_Red_Hat_Enterprise_Linux_for_Oracle_9i_and_10g_Databases/chap-Oracle_9i_and_10g_Tuning_Guide-Setting_File_Handles.html
 
-  def self.report(data=nil)
+  def self.report(data = nil)
     # execution time: 0.1 ms  [LOW]
     file_descriptors = {}
     data = File.read(DATA_FILE) unless data
@@ -45,7 +45,7 @@ module LinuxStats::OS::FileDescriptor
     # 2.6 and above
     file_descriptors[:used] = allocated - available
     file_descriptors[:max] = words[2].to_i
-    file_descriptors[:used_pct] = 100.0 * file_descriptors[:used]/file_descriptors[:max]
+    file_descriptors[:used_pct] = 100.0 * file_descriptors[:used] / file_descriptors[:max]
     file_descriptors
   end
 end

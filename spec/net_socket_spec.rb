@@ -23,9 +23,9 @@
 
 require 'linux_stats'
 
-SOCKETS={
-    :open => 12,
-    :timewait => 69
+SOCKETS = {
+  open: 12,
+  timewait: 69
 }
 SOCKETS_STRING = "
 sockets: used 673
@@ -36,7 +36,6 @@ UDP: inuse 11 mem 0
 include LinuxStats::OS
 
 describe 'Net Socket module function' do
-
   # happy path
   it 'should discover open and timewait sockets' do
     report = NetSocket.report SOCKETS_STRING
@@ -44,4 +43,3 @@ describe 'Net Socket module function' do
     expect(report[:tcp_timewait_conn]).to eq SOCKETS[:timewait]
   end
 end
-

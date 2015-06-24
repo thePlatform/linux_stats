@@ -22,7 +22,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-
 require 'time'
 require 'linux_stats'
 require 'json'
@@ -32,7 +31,6 @@ require 'json'
 # for the stats library.
 
 module LinuxStats
-
   module Default
     DELAY_SEC = 2
     ITERATIONS = 3
@@ -53,11 +51,10 @@ module LinuxStats
       elapsed_time = Time.now - start
       total_time += elapsed_time
       puts JSON.pretty_generate report
-      #puts "Generating the report took #{elapsed_time*1000} ms"
+      # puts "Generating the report took #{elapsed_time*1000} ms"
     end
-    #puts "Total time: #{total_time * 1000.0} ms, mean: #{1000.0 *total_time/iterations} ms"
+    # puts "Total time: #{total_time * 1000.0} ms, mean: #{1000.0 *total_time/iterations} ms"
   end
-
 end
 
 LinuxStats.run

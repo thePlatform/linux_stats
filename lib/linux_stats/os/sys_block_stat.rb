@@ -24,7 +24,6 @@
 require 'linux_stats'
 
 module LinuxStats::OS::BlockIO
-
   module Column
     READS = 0
     READ_SECTORS = 2
@@ -53,14 +52,14 @@ module LinuxStats::OS::BlockIO
 
   def self.sector_size
     begin
-      return File.read(DataFile::SECTOR_SIZE).strip().to_i
+      return File.read(DataFile::SECTOR_SIZE).strip.to_i
     rescue
       # handle CentOS 5
       return 512
     end
   end
 
-  def self.watched_disks(data=nil)
+  def self.watched_disks(data = nil)
     disk_list = []
     data = File.read(DataFile::DISK_STATS) unless data
     data.each_line do |line|
@@ -75,23 +74,22 @@ module LinuxStats::OS::BlockIO
 
   BYTES_PER_SECTOR = sector_size
   IGNORE_DISKS = [
-      '^dm-[0-9]',
-      '^fd[0-9]',
-      '^ram',
-      '^loop',
-      '^sr',
-      '^sd.*[0-9]'
+    '^dm-[0-9]',
+    '^fd[0-9]',
+    '^ram',
+    '^loop',
+    '^sr',
+    '^sd.*[0-9]'
   ]
   NUM_CPU = cpuinfo
   WATCHED_DISKS = watched_disks
 
   class Stat
-
-    def initialize(data=nil)
+    def initialize(_data = nil)
       set_stats
     end
 
-    def report(elapsed_time=nil)
+    def report(elapsed_time = nil)
       prev_stats = @current_stats
       prev_timestamp = @current_timestamp
       set_stats
@@ -108,7 +106,6 @@ module LinuxStats::OS::BlockIO
         ret[disk_name][:bytes_written_persec] =
             (cur_disk.write_bytes - prev_disk.write_bytes) / elapsed_time
 
-
         # ret[disk_name][:reads_persec] = (stats.reads - last.reads) / elapsed_time
         # disk_report[:writes_persec] = (stats.writes - last.writes) / elapsed_time
         # disk_report[:bytes_read_persec] = (stats.read_bytes - last.read_bytes) / elapsed_time
@@ -124,7 +121,7 @@ module LinuxStats::OS::BlockIO
     end
 
     def set_stats
-      @current_timestamp = Time.now()
+      @current_timestamp = Time.now
       @current_stats = {}
       WATCHED_DISKS.each do |disk_name|
         data = File.read("/sys/block/#{disk_name}/stat")
@@ -132,7 +129,6 @@ module LinuxStats::OS::BlockIO
         @current_stats[disk_name] = stats
       end
     end
-
   end
 
   class ThroughputData
@@ -177,18 +173,15 @@ module LinuxStats::OS::BlockIO
       @active_time_ms = words[Column::ACTIVE_TIME_MS].to_i
       @queue_time_ms = words[Column::QUEUE_TIME_MS].to_i
     end
-
   end
 
-
-  def self.init(data=nil)
+  def self.init(data = nil)
     @@stat = LinuxStats::OS::BlockIO::Stat.new(data)
   end
 
-  def self.report(elapsed_time=nil)
+  def self.report(elapsed_time = nil)
     @@stat.report(elapsed_time)
   end
-
 end
 
 LinuxStats::OS::BlockIO.init

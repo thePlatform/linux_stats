@@ -20,10 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-
 require 'linux_stats'
 
 module LinuxStats::OS
+  # collection of OS-level statistic utilities
 
   def self.report
     os_perf_stats = {}
@@ -42,5 +42,4 @@ module LinuxStats::OS
 
     os_perf_stats
   end
-
 end

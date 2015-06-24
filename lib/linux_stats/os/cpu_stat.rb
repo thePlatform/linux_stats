@@ -21,9 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-
 module LinuxStats::OS::CPU
-
   module Column
     USER = 1
     NICE = 2
@@ -38,8 +36,7 @@ module LinuxStats::OS::CPU
   DATA_FILE = '/proc/stat'
 
   class Stat
-
-    def initialize(data=nil)
+    def initialize(data = nil)
       set_stats data
     end
 
@@ -56,36 +53,33 @@ module LinuxStats::OS::CPU
       end
       ret[:os] = {}
       ret[:os][:interrupts_persec] =
-          (@current_stats[:interrupts] - prev_stats[:interrupts])/ elapsed_time
+          (@current_stats[:interrupts] - prev_stats[:interrupts]) / elapsed_time
       ret[:os][:ctxt_switches_persec] =
-          (@current_stats[:context_switches]-prev_stats[:context_switches]) / elapsed_time
+          (@current_stats[:context_switches] - prev_stats[:context_switches]) / elapsed_time
       ret[:os][:procs_running] = @current_stats[:procs_running]
       ret[:os][:procs_blocked] = @current_stats[:procs_blocked]
       ret
     end
 
-    def set_stats(proc_stat_data=nil)
+    def set_stats(proc_stat_data = nil)
       proc_stat_data = File.read(DATA_FILE) unless proc_stat_data
-      @current_timestamp = Time.now()
+      @current_timestamp = Time.now
       @current_stats = {}
       @current_stats[:cpu] = {}
       proc_stat_data.each_line do |line|
-        @current_stats[:interrupts] = line.split()[1].to_i if line =~ /^intr/
-        @current_stats[:context_switches]= line.split()[1].to_i if line =~/^ctxt/
-        @current_stats[:procs_running] = line.split()[1].to_i if line =~/^procs_running/
-        @current_stats[:procs_blocked] = line.split()[1].to_i if line =~/^procs_blocked/
+        @current_stats[:interrupts] = line.split[1].to_i if line =~ /^intr/
+        @current_stats[:context_switches]= line.split[1].to_i if line =~ /^ctxt/
+        @current_stats[:procs_running] = line.split[1].to_i if line =~ /^procs_running/
+        @current_stats[:procs_blocked] = line.split[1].to_i if line =~ /^procs_blocked/
         if line =~ /^cpu/
           cpu_stat = CPUData.new line
           @current_stats[:cpu][cpu_stat.name] = cpu_stat
         end
       end
     end
-
   end
 
-
   class CPUData
-
     # ingests a line from /proc/stat into a os structure of CPU
     # usage values
 
@@ -101,7 +95,6 @@ module LinuxStats::OS::CPU
                 :user
 
     def initialize(stat_line)
-
       # The meanings of the columns are as follows, from left to right:
       #    [1] user: normal processes executing in user mode
       #    [2] nice: niced processes executing in user mode
@@ -130,20 +123,20 @@ module LinuxStats::OS::CPU
       @user = words[Column::USER].to_i
     end
 
-    def report(prev=nil)
+    def report(prev = nil)
       report = {}
       return report unless prev
       # calculate avgs since the last snapshot
       elapsed_jiffies = total_jiffies - prev.total_jiffies
-      report[:idle_pct] = 100.0*(idle-prev.idle)/elapsed_jiffies
-      report[:iowait_pct] = 100.0*(iowait-prev.iowait)/elapsed_jiffies
-      report[:irq_pct] = 100.0*(irq-prev.irq)/elapsed_jiffies
-      report[:nice_pct] = 100.0*(nice-prev.nice)/elapsed_jiffies
-      report[:softirq_pct] = 100.0*(softirq-prev.softirq)/elapsed_jiffies
-      report[:steal_pct] = 100.0*(steal-prev.steal)/elapsed_jiffies
-      report[:system_pct] = 100.0*(system-prev.system)/elapsed_jiffies
+      report[:idle_pct] = 100.0 * (idle - prev.idle) / elapsed_jiffies
+      report[:iowait_pct] = 100.0 * (iowait - prev.iowait) / elapsed_jiffies
+      report[:irq_pct] = 100.0 * (irq - prev.irq) / elapsed_jiffies
+      report[:nice_pct] = 100.0 * (nice - prev.nice) / elapsed_jiffies
+      report[:softirq_pct] = 100.0 * (softirq - prev.softirq) / elapsed_jiffies
+      report[:steal_pct] = 100.0 * (steal - prev.steal) / elapsed_jiffies
+      report[:system_pct] = 100.0 * (system - prev.system) / elapsed_jiffies
       report[:used_pct] = 100.0 - report[:idle_pct]
-      report[:user_pct] = 100.0*(user-prev.user)/elapsed_jiffies
+      report[:user_pct] = 100.0 * (user - prev.user) / elapsed_jiffies
       report
     end
 
@@ -156,18 +149,18 @@ module LinuxStats::OS::CPU
       tot += report[:system_pct]
       tot += report[:idle_pct]
       tot += report[:iowait_pct]
-      tot +=report[:irq_pct]
+      tot += report[:irq_pct]
       tot += report[:softirq_pct]
       tot += report[:steal]
       tot
     end
   end
 
-  def self.report(elapsed_time=nil, data=nil)
+  def self.report(elapsed_time = nil, _data=nil)
     @@stat.report(elapsed_time)
   end
 
-  def self.init(data=nil)
+  def self.init(data = nil)
     @@stat = LinuxStats::OS::CPU::Stat.new(data)
   end
 end

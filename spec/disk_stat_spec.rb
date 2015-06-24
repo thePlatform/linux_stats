@@ -30,18 +30,16 @@ CENTOS_6_DISK_DATA = ' 4569504   134368 414454495 84656111  1886305  6114130 640
 include LinuxStats::OS
 
 describe 'Disk Stats Class' do
-
   it 'should parse Centos 5 os' do
     disk_stat = BlockIO::ThroughputData.new(CENTOS_5_DISK_DATA, BYTES_PER_SECTOR)
-    expect(disk_stat.reads).to eq 843809
+    expect(disk_stat.reads).to eq 843_809
   end
 
   it 'should parse Centos 6 os' do
     disk_stat = BlockIO::ThroughputData.new(CENTOS_6_DISK_DATA, BYTES_PER_SECTOR)
-    expect(disk_stat.reads).to eq 4569504
-    expect(disk_stat.queue_time_ms).to eq 117280149
+    expect(disk_stat.reads).to eq 4_569_504
+    expect(disk_stat.queue_time_ms).to eq 117_280_149
   end
-
 end
 
 describe 'module functions' do

@@ -151,6 +151,10 @@ module LinuxStats::PID::PidStat
     attr_accessor :pid_stats_map
 
     def initialize
+      reset
+    end
+
+    def reset
       @pid_stats_map = {}
     end
 

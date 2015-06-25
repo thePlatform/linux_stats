@@ -32,13 +32,15 @@ require 'linux_stats'
 #  * ...
 #
 # For gathering performance os on overall OS performance, see
-# os_stats.rb
+# lib/os_stats.rb
 #
 
 PID_INDEX = 2
 
 module LinuxStats::PID
-  # keeps a different reporter for each regex
+  # keeps a different reporter for each regex.  (Required for the
+  # case when LinuxStats is used as a library and many reports are
+  # running in the same VM)
   @@report_map = {}
 
   def self.report(friendly_name, regex)
@@ -48,6 +50,7 @@ module LinuxStats::PID
     process_pids = pids regex
     ret[friendly_name] = {}
     ret[friendly_name][:process_count] = process_pids.size
+    reporter.reset if process_pids.size == 0
     process_pids.each do |pid|
       reporter.record pid
     end

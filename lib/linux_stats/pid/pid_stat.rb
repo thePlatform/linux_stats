@@ -151,10 +151,6 @@ module LinuxStats::PID::PidStat
     attr_accessor :pid_stats_map
 
     def initialize
-      reset
-    end
-
-    def reset
       @pid_stats_map = {}
     end
 
@@ -165,7 +161,7 @@ module LinuxStats::PID::PidStat
     end
 
     # Roll up the stats from individual PIDs into a summary
-    def report
+    def report(process_pids)
       ret = {}
       return ret if pid_stats_map.size == 0
       age_sec = 0
@@ -173,7 +169,11 @@ module LinuxStats::PID::PidStat
       resident_set_bytes = 0
       threads = 0
       virtual_mem_bytes = 0
-      pid_stats_map.each do |_pid, stat|
+      pid_stats_map.each do |pid, stat|
+        unless process_pids.include? pid
+          pid_stats_map.delete(pid)
+          next
+        end
         age_sec += stat.perf_detail[:age_seconds]
         threads += stat.perf_detail[:threads]
         resident_set_bytes += stat.perf_detail[:mem][:resident_set_bytes]

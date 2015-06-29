@@ -67,7 +67,7 @@ Mac OS X is not supported.  linux_stats gets its data by inspecting the
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'pl_os_stats'
+gem 'linux_stats'
 ```
 
 And then execute:
@@ -76,7 +76,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install pl_os_stats
+    $ gem install linux_stats
 
 ## Usage
 
@@ -85,22 +85,22 @@ Example command line tools are included in the linux_stats gem.  These
 tools show the types of metrics it's possible to collect with the library.
 These tools are:
 
- * os_stat
- * pid_stat
+ * os_stats
+ * process_stats
 
 Usage:
 
 os_stat's usage is similar to sar, with all arguments being optional.
 
 ```
- os_stat [delay_seconds] [iterations]
+ os_stats [delay_seconds] [iterations]
 ```
 
-pid_stat's usage is similar to sar, with the addition of a regex and friendly_name option.  As with
-os_stat, all arguments are optional.
+process_stats' usage is similar to sar, with the addition of a regex and
+friendly_name option.  As with os_stats, all arguments are optional.
 
 ```
-  pid_stat [delay_seconds] [iterations] [regex] [friendly_name]
+  process_stats [delay_seconds] [iterations] [regex] [friendly_name]
 ```
 
 ### Client library usage

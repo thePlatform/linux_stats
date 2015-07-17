@@ -1,4 +1,3 @@
-
 # The MIT License (MIT)
 #
 # Copyright (c) 2015 ThePlatform for Media
@@ -61,7 +60,11 @@ module LinuxStats::PID
     # execution time: 7ms  [VERY HIGH]
     pid_list = []
     Dir['/proc/[0-9]*/cmdline'].each do |p|
-      pid_list.push(p.split('/')[PID_INDEX]) if File.read(p).match(cmd)
+      begin
+        pid_list.push(p.split('/')[PID_INDEX]) if File.read(p).match(cmd)
+      rescue
+        # ignore
+      end
     end
     pid_list
   end

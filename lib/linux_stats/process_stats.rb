@@ -40,32 +40,40 @@ module LinuxStats::PID
   # keeps a different reporter for each process name.  (Required for the
   # case when LinuxStats is used as a library and many reports are
   # running in the same VM)
-  @@report_map = {}
 
-  def self.report(friendly_name, regex)
-    @@report_map[regex] = PidStat::Reporter.new unless @@report_map.key? regex
-    ret = {}
-    reporter = @@report_map[regex]
-    process_pids = pids regex
-    ret[friendly_name] = {}
-    ret[friendly_name][:process_count] = process_pids.size
-    process_pids.each do |pid|
-      reporter.record pid
+  class Reporter
+
+    attr_reader :report_map
+
+    def initialize
+      @report_map = {}
     end
-    ret[friendly_name].merge! reporter.report process_pids
-    ret
-  end
 
-  def self.pids(cmd)
-    # execution time: 7ms  [VERY HIGH]
-    pid_list = []
-    Dir['/proc/[0-9]*/cmdline'].each do |p|
-      begin
-        pid_list.push(p.split('/')[PID_INDEX]) if File.read(p).match(cmd)
-      rescue
-        # ignore
+    def report(friendly_name, regex)
+      report_map[regex] = PidStat::Reporter.new unless report_map.key? regex
+      ret = {}
+      reporter = report_map[regex]
+      process_pids = pids regex
+      ret[friendly_name] = {}
+      ret[friendly_name][:process_count] = process_pids.size
+      process_pids.each do |pid|
+        reporter.record pid
       end
+      ret[friendly_name].merge! reporter.report process_pids
+      ret
     end
-    pid_list
+
+    def pids(cmd)
+      # execution time: 7ms  [VERY HIGH]
+      pid_list = []
+      Dir['/proc/[0-9]*/cmdline'].each do |p|
+        begin
+          pid_list.push(p.split('/')[PID_INDEX]) if File.read(p).match(cmd)
+        rescue
+          # ignore
+        end
+      end
+      pid_list
+    end
   end
 end

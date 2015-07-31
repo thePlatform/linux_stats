@@ -27,7 +27,8 @@ include LinuxStats::OS
 
 describe 'Partition Report' do
   it 'SENSU-261 -- it should calculate correct disk used percent' do
-    Mounts.report.each do |_, val|
+    reporter = Mounts::Reporter.new
+    reporter.report.each do |_, val|
       avail = val[:available_kb].to_f
       total = val[:total_kb].to_f
       # puts("Part: #{key},  Avail: #{avail}, tot: #{total}")
@@ -38,6 +39,8 @@ end
 
 describe 'module functions' do
   it 'should generate a happy path report' do
-    Mounts.report
+    reporter = Mounts::Reporter.new
+    data = reporter.report
+    expect(data.key? '/').to be true
   end
 end

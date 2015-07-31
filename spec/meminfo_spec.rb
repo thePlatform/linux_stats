@@ -46,7 +46,8 @@ something_else_to_ignore 1
 describe 'ProcMeminfo module functions' do
   # happy path
   it 'should generate a good report' do
-    report = Meminfo.report(MEMINFO_STRING)
+    reporter = Meminfo::Reporter.new
+    report = reporter.report(MEMINFO_STRING)
     expect(report[:mem_free_kb]).to eq MEMINFO_DATA[:mem_free]
     expect(report[:mem_total_kb]).to eq MEMINFO_DATA[:mem_total]
     free_mem = MEMINFO_DATA[:mem_free].to_f / MEMINFO_DATA[:mem_total].to_f

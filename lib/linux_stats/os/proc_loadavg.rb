@@ -1,4 +1,3 @@
-
 # The MIT License (MIT)
 #
 # Copyright (c) 2015 ThePlatform for Media
@@ -29,14 +28,16 @@ require 'linux_stats'
 module LinuxStats::OS::Loadavg
   DATA_FILE = '/proc/loadavg'
 
-  def self.report(data = nil)
-    # execution time: 0.12 ms  [LOW]
-    load_report = {}
-    data = File.read(DATA_FILE) unless data
-    words = data.split
-    load_report[:one] = words[0].to_f
-    load_report[:five] = words[1].to_f
-    load_report[:fifteen] = words[2].to_f
-    load_report
+  class Reporter
+    def report(data = nil)
+      # execution time: 0.12 ms  [LOW]
+      load_report = {}
+      data = File.read(DATA_FILE) unless data
+      words = data.split
+      load_report[:one] = words[0].to_f
+      load_report[:five] = words[1].to_f
+      load_report[:fifteen] = words[2].to_f
+      load_report
+    end
   end
 end

@@ -35,7 +35,7 @@ module LinuxStats::OS::CPU
 
   DATA_FILE = '/proc/stat'
 
-  class Stat
+  class Reporter
     def initialize(data = nil)
       set_stats data
     end
@@ -156,13 +156,4 @@ module LinuxStats::OS::CPU
     end
   end
 
-  def self.report(elapsed_time = nil, _data=nil)
-    @@stat.report(elapsed_time)
-  end
-
-  def self.init(data = nil)
-    @@stat = LinuxStats::OS::CPU::Stat.new(data)
-  end
 end
-
-LinuxStats::OS::CPU.init

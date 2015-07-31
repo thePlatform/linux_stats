@@ -84,7 +84,7 @@ module LinuxStats::OS::BlockIO
   NUM_CPU = cpuinfo
   WATCHED_DISKS = watched_disks
 
-  class Stat
+  class Reporter
     def initialize(_data = nil)
       set_stats
     end
@@ -175,13 +175,4 @@ module LinuxStats::OS::BlockIO
     end
   end
 
-  def self.init(data = nil)
-    @@stat = LinuxStats::OS::BlockIO::Stat.new(data)
-  end
-
-  def self.report(elapsed_time = nil)
-    @@stat.report(elapsed_time)
-  end
 end
-
-LinuxStats::OS::BlockIO.init

@@ -1,4 +1,3 @@
-
 # The MIT License (MIT)
 #
 # Copyright (c) 2015 ThePlatform for Media
@@ -48,12 +47,4 @@ describe 'CPUData container class' do
     expect(cpu_stat.user).to eq 2_533_647
     expect(cpu_stat.iowait).to eq 569_761
   end
-end
-
-describe 'CPU::Stat reporting class' do
-  # TODO
-end
-
-describe 'Module methods' do
-  # TODO
 end

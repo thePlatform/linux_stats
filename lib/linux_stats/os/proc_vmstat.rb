@@ -33,7 +33,7 @@ module LinuxStats::OS::Vmstat
 
   DATA_FILE = '/proc/vmstat'
 
-  class Stat
+  class Reporter
     attr_accessor :current_stats, :current_timestamp
 
     def initialize(data = nil)
@@ -84,13 +84,5 @@ module LinuxStats::OS::Vmstat
     end
   end
 
-  def self.init(data = nil)
-    @@stat = LinuxStats::OS::Vmstat::Stat.new(data)
-  end
-
-  def self.report(elapsed_time = nil, data = nil)
-    @@stat.report(elapsed_time, data)
-  end
 end
 
-LinuxStats::OS::Vmstat.init

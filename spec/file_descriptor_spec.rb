@@ -38,7 +38,8 @@ include LinuxStats::OS
 describe 'File Descriptor module functions' do
   # happy path
   it 'should generate a good report' do
-    report = FileDescriptor.report(FD_STRING)
+    reporter = FileDescriptor::Reporter.new
+    report = reporter.report(FD_STRING)
     expect(report[:used]).to eq FD[:allocated] - FD[:available]
     expect(report[:max]).to eq FD[:max]
     expect(report[:used_pct]).to eq 100.0 * (FD[:allocated] - FD[:available]) / FD[:max]

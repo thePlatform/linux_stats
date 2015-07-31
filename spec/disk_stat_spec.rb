@@ -44,6 +44,8 @@ end
 
 describe 'module functions' do
   it 'should generate a happy path report' do
-    BlockIO.report
+    reporter = BlockIO::Reporter.new
+    report = reporter.report
+    expect(report.key? 'sda').to be true
   end
 end

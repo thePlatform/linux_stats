@@ -1,4 +1,3 @@
-
 # The MIT License (MIT)
 #
 # Copyright (c) 2015 ThePlatform for Media
@@ -24,10 +23,10 @@
 require 'linux_stats'
 
 BW = {
-  bytes_rx: 1_084_177_486_625,
-  bytes_tx: 3_625_781_977,
-  errors_rx: 0,
-  errors_tx: 3
+    bytes_rx: 1_084_177_486_625,
+    bytes_tx: 3_625_781_977,
+    errors_rx: 0,
+    errors_tx: 3
 }
 ETH0_LINE = "eth0:#{BW[:bytes_rx]} 4089141436  #{BW[:errors_rx]}  0  0  0  0  0 #{BW[:bytes_tx]} 3625781977  #{BW[:errors_tx]}   0   0   0   0  0"
 BW_STRING = "
@@ -42,7 +41,7 @@ include LinuxStats::OS
 describe 'Net Stat Class' do
   # happy path
   it 'should initialize with happy data' do
-    stat = NetBandwidth::Stat.new BW_STRING
+    stat = NetBandwidth::Reporter.new BW_STRING
     expect(stat.current_stats['eth0'].bytes_rx).to eq BW[:bytes_rx]
     expect(stat.current_stats['eth0'].bytes_tx).to eq BW[:bytes_tx]
     expect(stat.current_stats['eth0'].errors_rx).to eq BW[:errors_rx]
@@ -63,6 +62,9 @@ end
 
 describe 'Module functions' do
   it 'should do a happy path report' do
-    NetBandwidth.report
+    reporter = NetBandwidth::Reporter.new
+    report = reporter.report
+    expect(report.key? 'eth0').to be true
+    expect(report['eth0'].key? :tx_bytes_persec).to be true
   end
 end

@@ -25,21 +25,47 @@ require 'linux_stats'
 module LinuxStats::OS
   # collection of OS-level statistic utilities
 
-  def self.report
-    os_perf_stats = {}
-    os_perf_stats[:memory] = Meminfo.report
-    os_perf_stats[:memory].merge! Vmstat.report
-    os_perf_stats[:partition_use] = Mounts.report
-    os_perf_stats[:load_avg] = Loadavg.report
-    os_perf_stats[:file_descriptor] = FileDescriptor.report
-    os_perf_stats[:net] = NetBandwidth.report
-    os_perf_stats[:net].merge! NetSocket.report
-    os_perf_stats[:disk_io] = BlockIO.report
+  class Reporter
 
-    proc_stat_report = CPU.report
-    os_perf_stats[:cpu] = proc_stat_report[:cpus]
-    os_perf_stats[:os] = proc_stat_report[:os]
+    attr_reader :cpu_reporter,
+                :disk_io_reporter,
+                :filedescriptor_reporter,
+                :loadavg_reporter,
+                :mem_reporter,
+                :mounts_reporter,
+                :netbandwidth_reporter,
+                :netsocket_reporter,
+                :vmstat_reporter
 
-    os_perf_stats
+    def initialize
+      @cpu_reporter = CPU::Reporter.new
+      @disk_io_reporter = BlockIO::Reporter.new
+      @filedescriptor_reporter = FileDescriptor::Reporter.new
+      @loadavg_reporter = Loadavg::Reporter.new
+      @mem_reporter = Meminfo::Reporter.new
+      @mounts_reporter = Mounts::Reporter.new
+      @netbandwidth_reporter = NetBandwidth::Reporter.new
+      @netsocket_reporter = NetSocket::Reporter.new
+      @vmstat_reporter = Vmstat::Reporter.new
+    end
+
+    def report
+      os_stats = {}
+      os_stats[:memory] = mem_reporter.report
+      os_stats[:memory].merge! vmstat_reporter.report
+      os_stats[:partition_use] = mounts_reporter.report
+      os_stats[:load_avg] = loadavg_reporter.report
+      os_stats[:file_descriptor] = filedescriptor_reporter.report
+      os_stats[:net] = netbandwidth_reporter.report
+      os_stats[:net].merge! netsocket_reporter.report
+      os_stats[:disk_io] = disk_io_reporter.report
+
+      proc_stat_report = cpu_reporter.report
+      os_stats[:cpu] = proc_stat_report[:cpus]
+      os_stats[:os] = proc_stat_report[:os]
+
+      os_stats
+    end
+
   end
 end

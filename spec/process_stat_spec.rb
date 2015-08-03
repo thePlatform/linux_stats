@@ -51,7 +51,7 @@ PIDSTAT_STRING = "
 0 0 0 0 0
 0 0"
 
-include LinuxStats::PID::PidStat
+include LinuxStats::Process::PidStat
 
 describe 'PidStatData' do
   it 'should initialize with the correct command line name' do

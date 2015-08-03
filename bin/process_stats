@@ -39,7 +39,7 @@ module LinuxStats
   end
 
   def self.run
-    reporter = LinuxStats::PID::Reporter.new
+    reporter = LinuxStats::Process::Reporter.new
     delay_sec = ARGV[0] ? ARGV[0].to_i : Default::DELAY_SEC
     iterations = ARGV[1] ? ARGV[1].to_i : Default::ITERATIONS
     proc_regex = ARGV[2] ? ARGV[2] : Default::PROCESS_REGEX
@@ -52,9 +52,9 @@ module LinuxStats
       elapsed_time = Time.now - start
       total_time += elapsed_time
       puts JSON.pretty_generate report
-      # puts "Generating the report took #{elapsed_time*1000} ms"
+      puts "Generating the report took #{elapsed_time*1000} ms"
     end
-    # puts "Total time: #{total_time * 1000.0} ms, mean: #{1000.0 *total_time/iterations} ms"
+    puts "Total time: #{total_time * 1000.0} ms, mean: #{1000.0 *total_time/iterations} ms"
   end
 end
 

@@ -33,7 +33,7 @@ require 'linux_stats/os/proc_sys_file'
 require 'linux_stats/os/proc_vmstat'
 require 'linux_stats/os/sys_block_stat'
 
-require 'linux_stats/pid/pid_stat'
+require 'linux_stats/process/process_stat'
 
 require 'linux_stats/os_stats'
 require 'linux_stats/process_stats'

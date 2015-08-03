@@ -43,7 +43,7 @@ module LinuxStats
     module Vmstat
     end
   end
-  module PID
+  module Process
     module PidStat
     end
   end

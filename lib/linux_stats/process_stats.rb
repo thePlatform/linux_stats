@@ -36,7 +36,7 @@ require 'linux_stats'
 
 PID_INDEX = 2
 
-module LinuxStats::PID
+module LinuxStats::Process
   # keeps a different reporter for each process name.  (Required for the
   # case when LinuxStats is used as a library and many reports are
   # running in the same VM)

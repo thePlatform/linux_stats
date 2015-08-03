@@ -23,7 +23,7 @@
 
 require 'linux_stats'
 
-module LinuxStats::PID::PidStat
+module LinuxStats::Process::PidStat
   module Column
     CHILD_GUEST = 43
     CHILD_KERNEL = 16
@@ -37,9 +37,6 @@ module LinuxStats::PID::PidStat
     THREADS = 19
     VMEM_SIZE = 22
   end
-
-  # maps PIDS to LinuxStats::PID::PidStat::Stat objects
-  @@pid_stats_map = {}
 
   # Given a PidStatData instance, calculates additional time-based metrics
   class Stat
@@ -105,8 +102,8 @@ module LinuxStats::PID::PidStat
     end
   end
 
-  # object to hold performance statistics for a single pid, derived from
-  # /proc/<pid>/stat
+  # object to hold performance statistics for a single process, derived from
+  # /proc/<process>/stat
   class PidStatData
     attr_accessor :ch_guest,
                   :ch_kernel,

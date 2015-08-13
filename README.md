@@ -116,7 +116,7 @@ An example client for OS-level stats might look like this:
     ITERATIONS = 3
     ITERATIONS.times do
       sleep(DELAY_SEC)
-      report = report = reporter.report
+      report = reporter.report
       puts JSON.pretty_generate report
     end
 
@@ -254,7 +254,7 @@ example output:
 
 An example client for process-level stats might look like this:
 
-#!/usr/bin/env ruby
+    #!/usr/bin/env ruby
 
     require 'linux_stats'
     require 'json'

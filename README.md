@@ -111,11 +111,12 @@ An example client for OS-level stats might look like this:
     require 'linux_stats'
     require 'json'
 
+    reporter = LinuxStats::OS::Reporter.new
     DELAY_SEC = 1.5
     ITERATIONS = 3
     ITERATIONS.times do
       sleep(DELAY_SEC)
-      report = LinuxStats::OS.report
+      report = report = reporter.report
       puts JSON.pretty_generate report
     end
 
@@ -253,18 +254,19 @@ example output:
 
 An example client for process-level stats might look like this:
 
-    #!/usr/bin/env ruby
+#!/usr/bin/env ruby
 
     require 'linux_stats'
     require 'json'
 
+    reporter = LinuxStats::Process::Reporter.new
     delay_sec = 2
     iterations = 3
     friendly_name = 'gnome terminal'
-    regex = 'gnome-term'
+    proc_regex = 'gnome-term'
     iterations.times do
       sleep(delay_sec)
-      report = LinuxStats::PID.report(friendly_name, regex)
+      report = reporter.report(friendly_name, proc_regex)
       puts JSON.pretty_generate report
     end
 

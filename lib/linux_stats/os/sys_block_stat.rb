@@ -64,7 +64,8 @@ module LinuxStats::OS::BlockIO
     data = File.read(DataFile::DISK_STATS) unless data
     data.each_line do |line|
       words = line.split
-      disk_list.push words[2]
+      disk_name = words[2]
+      disk_list.push disk_name if File.exists? "/sys/block/#{disk_name}/stat"
     end
     IGNORE_DISKS.each do |pattern|
       disk_list.reject! { |x| x =~ /#{pattern}/ }
@@ -105,11 +106,6 @@ module LinuxStats::OS::BlockIO
             (cur_disk.read_bytes - prev_disk.read_bytes) / elapsed_time
         ret[disk_name][:bytes_written_persec] =
             (cur_disk.write_bytes - prev_disk.write_bytes) / elapsed_time
-
-        # ret[disk_name][:reads_persec] = (stats.reads - last.reads) / elapsed_time
-        # disk_report[:writes_persec] = (stats.writes - last.writes) / elapsed_time
-        # disk_report[:bytes_read_persec] = (stats.read_bytes - last.read_bytes) / elapsed_time
-        # disk_report[:bytes_written_persec] = (stats.write_bytes - last.write_bytes) / elapsed_time
         cpu_ms = elapsed_time * NUM_CPU * 1.25
         pct_active = (cur_disk.active_time_ms - prev_disk.active_time_ms) / cpu_ms
         # pct_active is an approximation, which may occasionally be a bit over 100%.  We

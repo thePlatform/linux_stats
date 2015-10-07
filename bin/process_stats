@@ -32,7 +32,7 @@ require 'json'
 
 module LinuxStats
   module Default
-    DELAY_SEC = 2
+    DELAY_SEC = 1.1
     ITERATIONS = 3
     PROCESS_FRIENDLY_NAME = 'bash'
     PROCESS_REGEX = 'bash'

@@ -149,6 +149,7 @@ module LinuxStats::Process::PidStat
 
     def initialize
       @pid_stats_map = {}
+      @first_run = true
     end
 
     # gather performance data for a single PID
@@ -184,7 +185,8 @@ module LinuxStats::Process::PidStat
       ret[:mem] = {}
       ret[:mem][:resident_set_bytes] = resident_set_bytes
       ret[:mem][:virtual_mem_bytes] = virtual_mem_bytes
-      ret[:cpu_pct] = cpu_pct
+      ret[:cpu_pct] = cpu_pct unless @first_run
+      @first_run = false
       ret
     end
   end

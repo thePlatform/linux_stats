@@ -1,4 +1,3 @@
-
 # The MIT License (MIT)
 #
 # Copyright (c) 2015 ThePlatform for Media
@@ -24,6 +23,9 @@
 require 'linux_stats'
 
 module LinuxStats::Process::PidStat
+
+  CPU_COUNT = `grep processor /proc/cpuinfo | wc -l`.to_f
+
   module Column
     CHILD_GUEST = 43
     CHILD_KERNEL = 16
@@ -68,25 +70,25 @@ module LinuxStats::Process::PidStat
       @perf_detail = {}
       @perf_detail[:cpu] = {}
       proc_self = {
-        guest_pct: 100.0 * (@current_stats.se_guest - prev_stats.se_guest) / elapsed_jiffies,
-        kern_pct: 100.0 * (@current_stats.se_kernel - prev_stats.se_kernel) / elapsed_jiffies,
-        user_pct: 100.0 * (@current_stats.se_user - prev_stats.se_user) / elapsed_jiffies
+          guest_pct: 100.0 * (@current_stats.se_guest - prev_stats.se_guest) / elapsed_jiffies,
+          kern_pct: 100.0 * (@current_stats.se_kernel - prev_stats.se_kernel) / elapsed_jiffies,
+          user_pct: 100.0 * (@current_stats.se_user - prev_stats.se_user) / elapsed_jiffies
       }
       @perf_detail[:cpu][:self] = proc_self
       proc_child = {
-        guest_pct: 100.0 * (@current_stats.ch_guest - prev_stats.ch_guest) / elapsed_jiffies,
-        kern_pct: 100.0 * (@current_stats.ch_kernel - prev_stats.ch_kernel) / elapsed_jiffies,
-        user_pct: 100.0 * (@current_stats.ch_user - prev_stats.ch_user) / elapsed_jiffies
+          guest_pct: 100.0 * (@current_stats.ch_guest - prev_stats.ch_guest) / elapsed_jiffies,
+          kern_pct: 100.0 * (@current_stats.ch_kernel - prev_stats.ch_kernel) / elapsed_jiffies,
+          user_pct: 100.0 * (@current_stats.ch_user - prev_stats.ch_user) / elapsed_jiffies
       }
       @perf_detail[:cpu][:child] = proc_child
       @perf_detail[:cpu][:total] = {
-        guest_pct: proc_child[:guest_pct] + proc_self[:guest_pct],
-        kern_pct: proc_child[:kern_pct] + proc_self[:kern_pct],
-        user_pct: proc_child[:user_pct] + proc_self[:user_pct]
+          guest_pct: proc_child[:guest_pct] + proc_self[:guest_pct],
+          kern_pct: proc_child[:kern_pct] + proc_self[:kern_pct],
+          user_pct: proc_child[:user_pct] + proc_self[:user_pct]
       }
       @perf_detail[:mem] = {
-        resident_set_bytes: @current_stats.resident_set_pages * page_size_bytes,
-        virtual_mem_bytes: @current_stats.virtual_mem_bytes
+          resident_set_bytes: @current_stats.resident_set_pages * page_size_bytes,
+          virtual_mem_bytes: @current_stats.virtual_mem_bytes
       }
       @perf_detail[:threads] = @current_stats.threads
       start_time = @current_stats.start_time / jiffies_per_sec + boot_time
@@ -140,6 +142,7 @@ module LinuxStats::Process::PidStat
       @tot_kernel = @ch_kernel + @se_kernel
       @tot_user = @ch_user + @se_user
       @virtual_mem_bytes = words[Column::VMEM_SIZE].to_i
+      @pid = pid
     end
   end
 
@@ -149,13 +152,21 @@ module LinuxStats::Process::PidStat
 
     def initialize
       @pid_stats_map = {}
-      @first_run = true
     end
 
     # gather performance data for a single PID
     def record(pid, data = nil)
       pid_stats_map[pid] = Stat.new(pid, data) unless pid_stats_map[pid]
       pid_stats_map[pid].record
+    end
+
+    def process_cpu_pct(cpu_data)
+      cpu_pct = cpu_data[:self][:user_pct] +
+          cpu_data[:self][:kern_pct] +
+          cpu_data[:self][:guest_pct]
+      normalized_cpu_pct = cpu_pct / CPU_COUNT
+      normalized_cpu_pct = 100.0 if normalized_cpu_pct > 100.0
+      normalized_cpu_pct
     end
 
     # Roll up the stats from individual PIDs into a summary
@@ -176,17 +187,14 @@ module LinuxStats::Process::PidStat
         threads += stat.perf_detail[:threads]
         resident_set_bytes += stat.perf_detail[:mem][:resident_set_bytes]
         virtual_mem_bytes += stat.perf_detail[:mem][:virtual_mem_bytes]
-        cpu_pct += stat.perf_detail[:cpu][:self][:user_pct]
-        cpu_pct += stat.perf_detail[:cpu][:self][:kern_pct]
-        cpu_pct += stat.perf_detail[:cpu][:self][:guest_pct]
+        cpu_pct += process_cpu_pct stat.perf_detail[:cpu]
       end
       ret[:age_seconds] = age_sec
       ret[:threads] = threads
       ret[:mem] = {}
       ret[:mem][:resident_set_bytes] = resident_set_bytes
       ret[:mem][:virtual_mem_bytes] = virtual_mem_bytes
-      ret[:cpu_pct] = cpu_pct unless @first_run
-      @first_run = false
+      ret[:cpu_pct] = cpu_pct
       ret
     end
   end

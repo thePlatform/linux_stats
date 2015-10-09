@@ -1,4 +1,3 @@
-
 # The MIT License (MIT)
 #
 # Copyright (c) 2015 ThePlatform for Media
@@ -22,13 +21,15 @@
 # THE SOFTWARE.
 
 module LinuxStats
-  VERSION = '0.3.2'
+  VERSION = '0.3.3'
 end
 
 module LinuxStats
   # new
   module OS
     module BlockIO
+    end
+    module CPU
     end
     module Loadavg
     end

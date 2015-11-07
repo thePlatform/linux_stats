@@ -21,7 +21,7 @@
 # THE SOFTWARE.
 
 module LinuxStats
-  VERSION = '0.3.7'
+  VERSION = '0.3.8'
 end
 
 module LinuxStats

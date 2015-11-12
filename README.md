@@ -1,3 +1,7 @@
+<a href="http://tpteamcity.corp.theplatform.com/viewType.html?buildTypeId=DevOps_Ruby_LinuxStats">
+<img src="http://tpteamcity.corp.theplatform.com/app/rest/builds/buildType:(id:DevOps_Ruby_LinuxStats)/statusIcon"/>
+</a>
+
 # Linux Stats
 
 ## Overview

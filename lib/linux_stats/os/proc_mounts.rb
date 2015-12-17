@@ -30,7 +30,8 @@ module LinuxStats::OS::Mounts
       '^\/proc',
       '^\/run',
       '^\/sys',
-      '^\/cgroup'
+      '^\/cgroup',
+      '\['
   ]
 
   module DataFile

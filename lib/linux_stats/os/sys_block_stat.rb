@@ -107,6 +107,9 @@ module LinuxStats::OS::BlockIO
         ret[disk_name][:bytes_written_persec] =
             (cur_disk.write_bytes - prev_disk.write_bytes) / elapsed_time
         cpu_ms = elapsed_time * NUM_CPU * 1.25
+
+	# TODO: pct_active does not always agree w/ iostat's util column
+	# see http://stackoverflow.com/questions/4458183/how-the-util-of-iostat-is-computed
         pct_active = (cur_disk.active_time_ms - prev_disk.active_time_ms) / cpu_ms
         # pct_active is an approximation, which may occasionally be a bit over 100%.  We
         # cap it here at 100 to avoid confusing users.

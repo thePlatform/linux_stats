@@ -106,6 +106,17 @@ module LinuxStats::OS::BlockIO
             (cur_disk.read_bytes - prev_disk.read_bytes) / elapsed_time
         ret[disk_name][:bytes_written_persec] =
             (cur_disk.write_bytes - prev_disk.write_bytes) / elapsed_time
+        # mimic iostat avgqu-sz: (delta (total queue time ms))/(elapsed ms)
+        ret[disk_name][:avg_queue_size] = (cur_disk.queue_time_ms - prev_disk.queue_time_ms) / (elapsed_time * 1000)
+        # mimic iostat avgrq-sz, using bytes instead of sectors: bytes/requests
+        if ( cur_disk.reads - prev_disk.reads + cur_disk.writes - prev_disk.writes > 0)
+            ret[disk_name][:avg_request_bytes] =
+                (cur_disk.read_bytes - prev_disk.write_bytes + cur_disk.write_bytes - prev_disk.read_bytes) /
+                (cur_disk.reads - prev_disk.reads + cur_disk.writes - prev_disk.writes)
+        else
+            ret[disk_name][:avg_request_bytes] = 0
+        end
+
         cpu_ms = elapsed_time * NUM_CPU * 1.25
 
 	# TODO: pct_active does not always agree w/ iostat's util column

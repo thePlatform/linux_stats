@@ -60,12 +60,30 @@ DATA='
    8       5 sdx 244 31 2200 76 0 0 0 0 0 76 76
   11       0 sr0 0 0 0 0 0 0 0 0 0 0 0
 '
+
+METRICS_LIST = [
+  :reads_persec,
+  :writes_persec,
+  :bytes_read_persec,
+  :bytes_written_persec,
+  :avg_queue_size,
+  :avg_request_bytes,
+  :percent_active ]
+
 describe 'watched disks' do
 
   it 'should reject block devices that have no stat file' do
     disks = BlockIO.watched_disks DATA
     expect(disks.include? 'sda').to be true
     expect(disks.include? 'sdx').to be false
+  end
+
+  it 'should include all all metrics per block device' do
+    reporter = BlockIO::Reporter.new
+    report = reporter.report(1)
+    _key, metrics = report.first
+    expect(metrics.nil?).to be false
+    METRICS_LIST.each { | _metric | expect(metrics.key? _metric).to be true }
   end
 
 end

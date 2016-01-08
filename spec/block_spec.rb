@@ -83,7 +83,7 @@ describe 'watched disks' do
     report = reporter.report(1)
     _key, metrics = report.first
     expect(metrics.nil?).to be false
-    METRICS_LIST.each { | _metric | expect(metrics.key? _metric).to be true }
+    METRICS_LIST.each { | metric | expect(metrics.key? metric).to be true }
   end
 
 end

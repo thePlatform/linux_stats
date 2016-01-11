@@ -203,6 +203,8 @@ example output:
           "writes_persec": 0.0,
           "bytes_read_persec": 0.0,
           "bytes_written_persec": 0.0,
+          "avg_queue_size": 0.0,
+          "avg_request_bytes": 0,
           "percent_active": 0.0
         },
         "sda": {
@@ -210,6 +212,8 @@ example output:
           "writes_persec": 0.0,
           "bytes_read_persec": 100071.6266250863,
           "bytes_written_persec": 0.0,
+          "avg_queue_size": 1.3047762237281717,
+          "avg_request_bytes": 7059,
           "percent_active": 41.69651109378596
         }
       },

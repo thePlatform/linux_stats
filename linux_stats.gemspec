@@ -1,7 +1,7 @@
 
 # The MIT License (MIT)
 #
-# Copyright (c) 2015 ThePlatform for Media
+# Copyright (c) 2015-16 Comcast Technology Solutions
 #
 #     Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -29,10 +29,10 @@ Gem::Specification.new do |spec|
   spec.name          = 'linux_stats'
   spec.version       = LinuxStats::VERSION
   spec.authors       = ['Travis Bear']
-  spec.email         = ['travis.bear@theplatform.com']
+  spec.email         = ['travis.bear@comcast.com']
   spec.summary       = 'Lightweight OS stats extracted from /proc'
   spec.description   = 'Inspects the state of the system, reports stats'
-  spec.homepage      = 'http://theplatform.com' # TODO: point me at github
+  spec.homepage      = 'https://github.com/thePlatform/linux_stats' # TODO: point me at github
   spec.license       = 'All rights reserved'
 
   spec.files         = Dir['lib/**/*.rb'] +

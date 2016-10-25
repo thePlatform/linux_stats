@@ -33,11 +33,17 @@ module LinuxStats::OS::CPU
     STEAL = 8
   end
 
-  DATA_FILE = '/proc/stat'
+  PROC_DIRECTORY_DEFAULT = '/proc'
+  DATA_FILE = '/stat'
 
   class Reporter
-    def initialize(data = nil)
+    def initialize(data = nil, data_directory = PROC_DIRECTORY_DEFAULT)
+      set_data_paths data_directory
       set_stats data
+    end
+
+    def set_data_paths(data_directory = nil)
+      @proc_file_source = "#{data_directory}#{DATA_FILE}"
     end
 
     def report(elapsed_time=nil, data=nil)
@@ -62,7 +68,7 @@ module LinuxStats::OS::CPU
     end
 
     def set_stats(proc_stat_data = nil)
-      proc_stat_data = File.read(DATA_FILE) unless proc_stat_data
+      proc_stat_data = File.read(@proc_file_source) unless proc_stat_data
       @current_timestamp = Time.now
       @current_stats = {}
       @current_stats[:cpu] = {}

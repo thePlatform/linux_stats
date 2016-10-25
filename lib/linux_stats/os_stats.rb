@@ -37,6 +37,12 @@ module LinuxStats::OS
                 :netsocket_reporter,
                 :vmstat_reporter
 
+    PROC_DIRECTORY_MOUNTED = '/hostproc'
+    SYS_DIRECTORY_MOUNTED = '/hostsys'
+
+    @proc_directory = '/proc'
+    @sys_directory = '/sys'
+
     def initialize
       @cpu_reporter = CPU::Reporter.new
       @disk_io_reporter = BlockIO::Reporter.new
@@ -47,6 +53,15 @@ module LinuxStats::OS
       @netbandwidth_reporter = NetBandwidth::Reporter.new
       @netsocket_reporter = NetSocket::Reporter.new
       @vmstat_reporter = Vmstat::Reporter.new
+    end
+
+    def set_data_directories
+      if Dir.exists(PROC_DIRECTORY_MOUNTED)
+        @proc_directory = PROC_DIRECTORY_MOUNTED
+      end
+      if Dir.exists?(SYS_DIRECTORY_MOUNTED)
+        @sys_directory = SYS_DIRECTORY_MOUNTED
+      end
     end
 
     def report

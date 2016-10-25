@@ -26,13 +26,22 @@ require 'linux_stats'
 # data in the /proc/loadavg file
 
 module LinuxStats::OS::Loadavg
-  DATA_FILE = '/proc/loadavg'
+  PROC_DIRECTORY_DEFAULT = '/proc'
+  DATA_FILE = '/loadavg'
 
   class Reporter
+    def initialize(data_directory = PROC_DIRECTORY_DEFAULT)
+      set_data_paths data_directory
+    end
+
+    def set_data_paths(data_directory = nil)
+      @proc_file_source = "#{data_directory}#{DATA_FILE}"
+    end
+
     def report(data = nil)
       # execution time: 0.12 ms  [LOW]
       load_report = {}
-      data = File.read(DATA_FILE) unless data
+      data = File.read(@proc_file_source) unless data
       words = data.split
       load_report[:one] = words[0].to_f
       load_report[:five] = words[1].to_f

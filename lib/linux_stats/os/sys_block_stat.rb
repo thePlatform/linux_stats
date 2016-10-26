@@ -45,61 +45,62 @@ module LinuxStats::OS::BlockIO
     SECTOR_SIZE = '/block/sda/queue/hw_sector_size'
   end
 
-  def self.cpuinfo
-    ret = 0
-    IO.readlines(@proc_cpuinfo_source).each do |line|
-      ret += 1 if line =~ /^processor/
-    end
-    ret
-  end
-
-  def self.sector_size
-    begin
-      return File.read(@sys_sectorsize_source).strip.to_i
-    rescue
-      # handle CentOS 5
-      return 512
-    end
-  end
-
-  def self.watched_disks(data = nil)
-    disk_list = []
-    data = File.read(@proc_diskstats_source) unless data
-    data.each_line do |line|
-      words = line.split
-      disk_name = words[2]
-      disk_list.push disk_name if File.exists? "/sys/block/#{disk_name}/stat"
-    end
-    IGNORE_DISKS.each do |pattern|
-      disk_list.reject! { |x| x =~ /#{pattern}/ }
-    end
-    disk_list
-  end
-
-  BYTES_PER_SECTOR = sector_size
-  IGNORE_DISKS = [
-    '^dm-[0-9]',
-    '^fd[0-9]',
-    '^ram',
-    '^loop',
-    '^sr',
-    '^sd.*[0-9]'
-  ]
-  NUM_CPU = cpuinfo
-  WATCHED_DISKS = watched_disks
-
   class Reporter
     def initialize(_data = nil, proc_data_directory = PROC_DIRECTORY_DEFAULT, sys_data_directory = SYS_DIRECTORY_DEFAULT)
       puts "Does I initialize?"
       set_data_paths(proc_data_directory,sys_data_directory)
       puts "BLOCKIO FILE SOURCES = #{@proc_cpuinfo_source},#{@proc_diskstats_source},#{@sys_sectorsize_source}"
+
+      @bytes_per_sector = sector_size
+      @ignore_disks = [
+          '^dm-[0-9]',
+          '^fd[0-9]',
+          '^ram',
+          '^loop',
+          '^sr',
+          '^sd.*[0-9]'
+      ]
+      @num_cpu = cpuinfo
+      @watched_disks_list = watched_disks
       set_stats
     end
     
     def set_data_paths(proc_data_directory = nil, sys_data_directory = nil)
+      @sys_directory = sys_data_directory
       @proc_cpuinfo_source = "#{proc_data_directory}#{DataFile::CPUINFO}"
       @proc_diskstats_source = "#{proc_data_directory}#{DataFile::DISK_STATS}"
       @sys_sectorsize_source = "#{sys_data_directory}#{DataFile::SECTOR_SIZE}"
+    end
+
+    def self.cpuinfo
+      ret = 0
+      IO.readlines(@proc_cpuinfo_source).each do |line|
+        ret += 1 if line =~ /^processor/
+      end
+      ret
+    end
+
+    def self.sector_size
+      begin
+        return File.read(@sys_sectorsize_source).strip.to_i
+      rescue
+        # handle CentOS 5
+        return 512
+      end
+    end
+
+    def self.watched_disks(data = nil)
+      disk_list = []
+      data = File.read(@proc_diskstats_source) unless data
+      data.each_line do |line|
+        words = line.split
+        disk_name = words[2]
+        disk_list.push disk_name if File.exists? "/sys/block/#{disk_name}/stat"
+      end
+      @ignore_disks.each do |pattern|
+        disk_list.reject! { |x| x =~ /#{pattern}/ }
+      end
+      disk_list
     end
 
     def report(elapsed_time = nil)
@@ -108,7 +109,7 @@ module LinuxStats::OS::BlockIO
       set_stats
       elapsed_time = @current_timestamp - prev_timestamp unless elapsed_time
       ret = {}
-      WATCHED_DISKS.each do |disk_name|
+      @watched_disks_list.each do |disk_name|
         cur_disk = @current_stats[disk_name]
         prev_disk = prev_stats[disk_name]
         ret[disk_name] = {}
@@ -129,7 +130,7 @@ module LinuxStats::OS::BlockIO
             ret[disk_name][:avg_request_bytes] = 0
         end
 
-        cpu_ms = elapsed_time * NUM_CPU * 1.25
+        cpu_ms = elapsed_time * @num_cpu * 1.25
 
 	# TODO: pct_active does not always agree w/ iostat's util column
 	# see http://stackoverflow.com/questions/4458183/how-the-util-of-iostat-is-computed
@@ -145,9 +146,9 @@ module LinuxStats::OS::BlockIO
     def set_stats
       @current_timestamp = Time.now
       @current_stats = {}
-      WATCHED_DISKS.each do |disk_name|
-        data = File.read("/sys/block/#{disk_name}/stat")
-        stats = ThroughputData.new(data, BYTES_PER_SECTOR)
+      @watched_disks_list.each do |disk_name|
+        data = File.read("#{@sys_directory}/block/#{disk_name}/stat")
+        stats = ThroughputData.new(data, @bytes_per_sector)
         @current_stats[disk_name] = stats
       end
     end

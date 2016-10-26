@@ -45,8 +45,17 @@ module LinuxStats::Process
 
     attr_reader :report_map
 
+    PROC_DIRECTORY_MOUNTED = '/hostproc'
+
     def initialize
       @report_map = {}
+    end
+
+    def set_proc_directory
+      @proc_directory = '/proc'
+      if Dir.exists?(PROC_DIRECTORY_MOUNTED)
+        @proc_directory = PROC_DIRECTORY_MOUNTED
+      end
     end
 
     def report(friendly_name, regex)
@@ -66,7 +75,8 @@ module LinuxStats::Process
     def pids(cmd)
       # execution time: 7ms  [VERY HIGH]
       pid_list = []
-      Dir['/proc/[0-9]*/cmdline'].each do |p|
+      pid_dir_regex = "#{@proc_directory}/[0-9]*/cmdline"
+      Dir[pid_dir_regex].each do |p|
         begin
           pid_list.push(p.split('/')[PID_INDEX]) if File.read(p).match(cmd)
         rescue

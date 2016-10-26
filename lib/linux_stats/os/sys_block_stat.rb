@@ -51,7 +51,7 @@ module LinuxStats::OS::BlockIO
       set_data_paths(proc_data_directory,sys_data_directory)
       puts "BLOCKIO FILE SOURCES = #{@proc_cpuinfo_source},#{@proc_diskstats_source},#{@sys_sectorsize_source}"
 
-      @bytes_per_sector = self.sector_size
+      @bytes_per_sector = sector_size
       @ignore_disks = [
           '^dm-[0-9]',
           '^fd[0-9]',
@@ -60,8 +60,8 @@ module LinuxStats::OS::BlockIO
           '^sr',
           '^sd.*[0-9]'
       ]
-      @num_cpu = self.cpuinfo
-      @watched_disks_list = self.watched_disks
+      @num_cpu = cpuinfo
+      @watched_disks_list = watched_disks
       set_stats
     end
     
@@ -72,7 +72,7 @@ module LinuxStats::OS::BlockIO
       @sys_sectorsize_source = "#{sys_data_directory}#{DataFile::SECTOR_SIZE}"
     end
 
-    def self.cpuinfo
+    def cpuinfo
       ret = 0
       IO.readlines(@proc_cpuinfo_source).each do |line|
         ret += 1 if line =~ /^processor/
@@ -80,7 +80,7 @@ module LinuxStats::OS::BlockIO
       ret
     end
 
-    def self.sector_size
+    def sector_size
       begin
         return File.read(@sys_sectorsize_source).strip.to_i
       rescue
@@ -89,7 +89,7 @@ module LinuxStats::OS::BlockIO
       end
     end
 
-    def self.watched_disks(data = nil)
+    def watched_disks(data = nil)
       disk_list = []
       data = File.read(@proc_diskstats_source) unless data
       data.each_line do |line|

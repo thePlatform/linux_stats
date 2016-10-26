@@ -40,14 +40,14 @@ module LinuxStats::OS
     PROC_DIRECTORY_MOUNTED = '/hostproc'
     SYS_DIRECTORY_MOUNTED = '/hostsys'
 
-    @proc_directory = '/proc'
-    @sys_directory = '/sys'
-
     def initialize
-      @cpu_reporter = CPU::Reporter.new
+      set_data_directories
+      puts "PROC DIRECTORY = #{@proc_directory}"
+      puts "SYS DIRECTORY = #{@sys_directory}"
+      @cpu_reporter = CPU::Reporter.new(nil,@proc_directory)
       @disk_io_reporter = BlockIO::Reporter.new
       @filedescriptor_reporter = FileDescriptor::Reporter.new
-      @loadavg_reporter = Loadavg::Reporter.new
+      @loadavg_reporter = Loadavg::Reporter.new(@proc_directory)
       @mem_reporter = Meminfo::Reporter.new
       @mounts_reporter = Mounts::Reporter.new
       @netbandwidth_reporter = NetBandwidth::Reporter.new
@@ -56,7 +56,9 @@ module LinuxStats::OS
     end
 
     def set_data_directories
-      if Dir.exists(PROC_DIRECTORY_MOUNTED)
+      @proc_directory = '/proc'
+      @sys_directory = '/sys'
+      if Dir.exists?(PROC_DIRECTORY_MOUNTED)
         @proc_directory = PROC_DIRECTORY_MOUNTED
       end
       if Dir.exists?(SYS_DIRECTORY_MOUNTED)

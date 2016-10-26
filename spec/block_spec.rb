@@ -73,7 +73,8 @@ METRICS_LIST = [
 describe 'watched disks' do
 
   it 'should reject block devices that have no stat file' do
-    disks = BlockIO.watched_disks DATA
+    diskreporter = Block.Reporter.new
+    disks = diskreporter.watched_disks DATA
     expect(disks.include? 'sda').to be true
     expect(disks.include? 'sdx').to be false
   end

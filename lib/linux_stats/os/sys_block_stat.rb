@@ -51,7 +51,7 @@ module LinuxStats::OS::BlockIO
       set_data_paths(proc_data_directory,sys_data_directory)
       puts "BLOCKIO FILE SOURCES = #{@proc_cpuinfo_source},#{@proc_diskstats_source},#{@sys_sectorsize_source}"
 
-      @bytes_per_sector = sector_size
+      @bytes_per_sector = self.sector_size
       @ignore_disks = [
           '^dm-[0-9]',
           '^fd[0-9]',
@@ -60,8 +60,8 @@ module LinuxStats::OS::BlockIO
           '^sr',
           '^sd.*[0-9]'
       ]
-      @num_cpu = cpuinfo
-      @watched_disks_list = watched_disks
+      @num_cpu = self.cpuinfo
+      @watched_disks_list = self.watched_disks
       set_stats
     end
     

@@ -62,6 +62,10 @@ Linux process.  Metrics include information on:
 linux_stats was written specifically targeting Centos 5 & 6.  It's likely
 to work on other platforms as well, but those configurations are untested.
 
+## Docker Support
+We've added convention-based support for linux_stats to collect host information while running within a Docker
+container.  This is accomplished by mounting the host's /proc and /sys to /hostproc and /hostsys within the container.
+
 ### Note
 Mac OS X is not supported.  linux_stats gets its data by inspecting the
 /proc filesystem, which does not exist on macs.

@@ -48,6 +48,7 @@ module LinuxStats::Process
     PROC_DIRECTORY_MOUNTED = '/hostproc'
 
     def initialize
+      set_proc_directory
       @report_map = {}
     end
 

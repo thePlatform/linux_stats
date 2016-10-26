@@ -48,9 +48,9 @@ module LinuxStats::OS
       @disk_io_reporter = BlockIO::Reporter.new
       @filedescriptor_reporter = FileDescriptor::Reporter.new
       @loadavg_reporter = Loadavg::Reporter.new(@proc_directory)
-      @mem_reporter = Meminfo::Reporter.new
-      @mounts_reporter = Mounts::Reporter.new
-      @netbandwidth_reporter = NetBandwidth::Reporter.new
+      @mem_reporter = Meminfo::Reporter.new(@proc_directory)
+      @mounts_reporter = Mounts::Reporter.new(@proc_directory)
+      @netbandwidth_reporter = NetBandwidth::Reporter.new(nil,@proc_directory)
       @netsocket_reporter = NetSocket::Reporter.new
       @vmstat_reporter = Vmstat::Reporter.new
     end

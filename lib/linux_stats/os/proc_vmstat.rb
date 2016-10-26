@@ -30,14 +30,21 @@ module LinuxStats::OS::Vmstat
     SWAP_IN = '^pswpin'
     SWAP_OUT = '^pswpout'
   end
-
-  DATA_FILE = '/proc/vmstat'
+  
+  PROC_DIRECTORY_DEFAULT = '/proc'
+  DATA_FILE = '/vmstat'
 
   class Reporter
     attr_accessor :current_stats, :current_timestamp
 
-    def initialize(data = nil)
+    def initialize(data = nil, data_directory = PROC_DIRECTORY_DEFAULT)
+      set_data_paths data_directory
+      puts "VMSTAT FILE SOURCE = #{@proc_file_source}"
       set_stats data
+    end
+
+    def set_data_paths(data_directory = nil)
+      @proc_file_source = "#{data_directory}#{DATA_FILE}"
     end
 
     def report(elapsed_time = nil, data = nil)
@@ -61,7 +68,7 @@ module LinuxStats::OS::Vmstat
 
     # gets a snapshot of the swap and page info in /proc/vmstat
     def set_stats(vmstat_data = nil)
-      vmstat_data = File.read(DATA_FILE) unless vmstat_data
+      vmstat_data = File.read(@proc_file_source) unless vmstat_data
       @current_timestamp = Time.now
       @current_stats = {}
       vmstat_data.each_line do |line|

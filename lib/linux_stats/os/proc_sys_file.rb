@@ -26,17 +26,25 @@ require 'linux_stats'
 # /proc/sys/fs/file-nr
 
 module LinuxStats::OS::FileDescriptor
-
-  DATA_FILE = '/proc/sys/fs/file-nr'
+  PROC_DIRECTORY_DEFAULT = '/proc'
+  DATA_FILE = '/sys/fs/file-nr'
 
   class Reporter
     # for description of file-nr info, see
     # https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/5/html/Tuning_and_Optimizing_Red_Hat_Enterprise_Linux_for_Oracle_9i_and_10g_Databases/chap-Oracle_9i_and_10g_Tuning_Guide-Setting_File_Handles.html
+    def initialize(data_directory = PROC_DIRECTORY_DEFAULT)
+      set_data_paths data_directory
+      puts "FILEDESC FILE SOURCE = #{@proc_file_source}"
+    end
+
+    def set_data_paths(data_directory = nil)
+      @proc_file_source = "#{data_directory}#{DATA_FILE}"
+    end
 
     def report(data = nil)
       # execution time: 0.1 ms  [LOW]
       file_descriptors = {}
-      data = File.read(DATA_FILE) unless data
+      data = File.read(@proc_file_source) unless data
       words = data.split
       allocated = words[0].to_i
       available = words[1].to_i

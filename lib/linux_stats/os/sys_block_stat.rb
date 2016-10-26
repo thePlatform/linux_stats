@@ -24,6 +24,9 @@
 require 'linux_stats'
 
 module LinuxStats::OS::BlockIO
+  PROC_DIRECTORY_DEFAULT = '/proc'
+  SYS_DIRECTORY_DEFAULT = '/sys'
+
   module Column
     READS = 0
     READ_SECTORS = 2
@@ -37,14 +40,14 @@ module LinuxStats::OS::BlockIO
   end
 
   module DataFile
-    CPUINFO = '/proc/cpuinfo'
-    DISK_STATS = '/proc/diskstats'
-    SECTOR_SIZE = '/sys/block/sda/queue/hw_sector_size'
+    CPUINFO = '/cpuinfo'
+    DISK_STATS = '/diskstats'
+    SECTOR_SIZE = '/block/sda/queue/hw_sector_size'
   end
 
   def self.cpuinfo
     ret = 0
-    IO.readlines(DataFile::CPUINFO).each do |line|
+    IO.readlines(@proc_cpuinfo_source).each do |line|
       ret += 1 if line =~ /^processor/
     end
     ret
@@ -52,7 +55,7 @@ module LinuxStats::OS::BlockIO
 
   def self.sector_size
     begin
-      return File.read(DataFile::SECTOR_SIZE).strip.to_i
+      return File.read(@sys_sectorsize_source).strip.to_i
     rescue
       # handle CentOS 5
       return 512
@@ -61,7 +64,7 @@ module LinuxStats::OS::BlockIO
 
   def self.watched_disks(data = nil)
     disk_list = []
-    data = File.read(DataFile::DISK_STATS) unless data
+    data = File.read(@proc_diskstats_source) unless data
     data.each_line do |line|
       words = line.split
       disk_name = words[2]
@@ -86,8 +89,17 @@ module LinuxStats::OS::BlockIO
   WATCHED_DISKS = watched_disks
 
   class Reporter
-    def initialize(_data = nil)
+    def initialize(_data = nil, proc_data_directory = PROC_DIRECTORY_DEFAULT, sys_data_directory = SYS_DIRECTORY_DEFAULT)
+      puts "Does I initialize?"
+      set_data_paths(proc_data_directory,sys_data_directory)
+      puts "BLOCKIO FILE SOURCES = #{@proc_cpuinfo_source},#{@proc_diskstats_source},#{@sys_sectorsize_source}"
       set_stats
+    end
+    
+    def set_data_paths(proc_data_directory = nil, sys_data_directory = nil)
+      @proc_cpuinfo_source = "#{proc_data_directory}#{DataFile::CPUINFO}"
+      @proc_diskstats_source = "#{proc_data_directory}#{DataFile::DISK_STATS}"
+      @sys_sectorsize_source = "#{sys_data_directory}#{DataFile::SECTOR_SIZE}"
     end
 
     def report(elapsed_time = nil)

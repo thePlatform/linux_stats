@@ -44,15 +44,15 @@ module LinuxStats::OS
       set_data_directories
       puts "PROC DIRECTORY = #{@proc_directory}"
       puts "SYS DIRECTORY = #{@sys_directory}"
-      @cpu_reporter = CPU::Reporter.new(nil,@proc_directory)
-      @disk_io_reporter = BlockIO::Reporter.new
-      @filedescriptor_reporter = FileDescriptor::Reporter.new
+      @cpu_reporter = CPU::Reporter.new(nil, @proc_directory)
+      @disk_io_reporter = BlockIO::Reporter.new(nil, @proc_directory, @sys_directory)
+      @filedescriptor_reporter = FileDescriptor::Reporter.new(@proc_directory)
       @loadavg_reporter = Loadavg::Reporter.new(@proc_directory)
       @mem_reporter = Meminfo::Reporter.new(@proc_directory)
       @mounts_reporter = Mounts::Reporter.new(@proc_directory)
       @netbandwidth_reporter = NetBandwidth::Reporter.new(nil,@proc_directory)
-      @netsocket_reporter = NetSocket::Reporter.new
-      @vmstat_reporter = Vmstat::Reporter.new
+      @netsocket_reporter = NetSocket::Reporter.new(@proc_directory)
+      @vmstat_reporter = Vmstat::Reporter.new(nil, @proc_directory)
     end
 
     def set_data_directories

@@ -47,7 +47,6 @@ module LinuxStats::OS::BlockIO
 
   class Reporter
     def initialize(_data = nil, proc_data_directory = PROC_DIRECTORY_DEFAULT, sys_data_directory = SYS_DIRECTORY_DEFAULT)
-      puts "Does I initialize?"
       set_data_paths(proc_data_directory,sys_data_directory)
       puts "BLOCKIO FILE SOURCES = #{@proc_cpuinfo_source},#{@proc_diskstats_source},#{@sys_sectorsize_source}"
 

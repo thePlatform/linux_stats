@@ -46,7 +46,6 @@ module LinuxStats::OS::Mounts
 
     def initialize(data_directory = PROC_DIRECTORY_DEFAULT)
       set_data_paths data_directory
-      puts "MOUNTS PATH = #{@proc_data_source}"
       @blocks_per_kilobyte = 4 # TODO: calculate from info in /proc?  Where?
       @mounted_partitions = mounts
     end

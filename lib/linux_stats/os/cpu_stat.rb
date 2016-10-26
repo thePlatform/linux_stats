@@ -40,7 +40,6 @@ module LinuxStats::OS::CPU
     def initialize(data = nil, data_directory = PROC_DIRECTORY_DEFAULT)
       set_data_paths data_directory
       set_stats data
-      puts "PROC FILE SOURCE = #{@proc_file_source}"
     end
 
     def set_data_paths(data_directory = nil)

@@ -37,7 +37,6 @@ module LinuxStats::OS::NetSocket
   class Reporter
     def initialize(data_directory = PROC_DIRECTORY_DEFAULT)
       set_data_paths data_directory
-      puts "NETSOCKSTATS FILE SOURCE = #{@proc_file_source}"
     end
 
     def set_data_paths(data_directory = nil)

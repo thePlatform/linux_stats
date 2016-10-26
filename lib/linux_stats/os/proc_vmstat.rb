@@ -39,7 +39,6 @@ module LinuxStats::OS::Vmstat
 
     def initialize(data = nil, data_directory = PROC_DIRECTORY_DEFAULT)
       set_data_paths data_directory
-      puts "VMSTAT FILE SOURCE = #{@proc_file_source}"
       set_stats data
     end
 

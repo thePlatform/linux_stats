@@ -34,7 +34,6 @@ module LinuxStats::OS::FileDescriptor
     # https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/5/html/Tuning_and_Optimizing_Red_Hat_Enterprise_Linux_for_Oracle_9i_and_10g_Databases/chap-Oracle_9i_and_10g_Tuning_Guide-Setting_File_Handles.html
     def initialize(data_directory = PROC_DIRECTORY_DEFAULT)
       set_data_paths data_directory
-      puts "FILEDESC FILE SOURCE = #{@proc_file_source}"
     end
 
     def set_data_paths(data_directory = nil)

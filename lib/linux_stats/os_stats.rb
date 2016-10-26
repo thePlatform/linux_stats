@@ -42,8 +42,6 @@ module LinuxStats::OS
 
     def initialize
       set_data_directories
-      puts "PROC DIRECTORY = #{@proc_directory}"
-      puts "SYS DIRECTORY = #{@sys_directory}"
       @cpu_reporter = CPU::Reporter.new(nil, @proc_directory)
       @disk_io_reporter = BlockIO::Reporter.new(nil, @proc_directory, @sys_directory)
       @filedescriptor_reporter = FileDescriptor::Reporter.new(@proc_directory)

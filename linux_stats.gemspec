@@ -28,11 +28,11 @@ require 'linux_stats/version'
 Gem::Specification.new do |spec|
   spec.name          = 'linux_stats'
   spec.version       = LinuxStats::VERSION
-  spec.authors       = ['Travis Bear']
-  spec.email         = ['travis.bear@comcast.com']
+  spec.authors       = ['Continuous Delivery Tribe - Comcast Technology Solutions']
+  spec.email         = ['tribecd@comcast.com']
   spec.summary       = 'Lightweight OS stats extracted from /proc'
   spec.description   = 'Inspects the state of the system, reports stats'
-  spec.homepage      = 'https://github.com/thePlatform/linux_stats' # TODO: point me at github
+  spec.homepage      = 'https://github.com/thePlatform/linux_stats'
   spec.license       = 'All rights reserved'
 
   spec.files         = Dir['lib/**/*.rb'] +

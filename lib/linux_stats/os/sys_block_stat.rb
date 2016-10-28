@@ -46,7 +46,9 @@ module LinuxStats::OS::BlockIO
   end
 
   class Reporter
-    def initialize(_data = nil, proc_data_directory = PROC_DIRECTORY_DEFAULT, sys_data_directory = SYS_DIRECTORY_DEFAULT)
+    def initialize(_data = nil, 
+        proc_data_directory = PROC_DIRECTORY_DEFAULT, 
+        sys_data_directory = SYS_DIRECTORY_DEFAULT)
       set_data_paths(proc_data_directory,sys_data_directory)
 
       @bytes_per_sector = sector_size

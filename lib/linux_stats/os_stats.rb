@@ -27,7 +27,9 @@ module LinuxStats::OS
 
   class Reporter
 
-    attr_reader :cpu_reporter,
+    attr_reader :proc_directory,
+                :sys_directory,
+                :cpu_reporter,
                 :disk_io_reporter,
                 :filedescriptor_reporter,
                 :loadavg_reporter,
@@ -40,8 +42,9 @@ module LinuxStats::OS
     PROC_DIRECTORY_MOUNTED = '/hostproc'
     SYS_DIRECTORY_MOUNTED = '/hostsys'
 
-    def initialize
-      set_data_directories
+    def initialize(use_test_paths = false)
+      set_data_directories use_test_paths
+      return if use_test_paths
       @cpu_reporter = CPU::Reporter.new(nil, @proc_directory)
       @disk_io_reporter = BlockIO::Reporter.new(nil, @proc_directory, @sys_directory)
       @filedescriptor_reporter = FileDescriptor::Reporter.new(@proc_directory)
@@ -53,13 +56,13 @@ module LinuxStats::OS
       @vmstat_reporter = Vmstat::Reporter.new(nil, @proc_directory)
     end
 
-    def set_data_directories
+    def set_data_directories(use_test_paths = false)
       @proc_directory = '/proc'
       @sys_directory = '/sys'
-      if Dir.exists?(PROC_DIRECTORY_MOUNTED)
+      if Dir.exists?(PROC_DIRECTORY_MOUNTED) || use_test_paths
         @proc_directory = PROC_DIRECTORY_MOUNTED
       end
-      if Dir.exists?(SYS_DIRECTORY_MOUNTED)
+      if Dir.exists?(SYS_DIRECTORY_MOUNTED) || use_test_paths
         @sys_directory = SYS_DIRECTORY_MOUNTED
       end
     end

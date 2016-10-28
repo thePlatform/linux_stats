@@ -43,18 +43,20 @@ module LinuxStats::Process
 
   class Reporter
 
-    attr_reader :report_map
+    attr_reader :proc_directory,
+                :report_map
 
     PROC_DIRECTORY_MOUNTED = '/hostproc'
 
-    def initialize
-      set_proc_directory
+    def initialize(use_test_paths = false)
+      set_proc_directory use_test_paths
+      return if use_test_paths
       @report_map = {}
     end
 
-    def set_proc_directory
+    def set_proc_directory(use_test_paths = false)
       @proc_directory = '/proc'
-      if Dir.exists?(PROC_DIRECTORY_MOUNTED)
+      if Dir.exists?(PROC_DIRECTORY_MOUNTED) || use_test_paths
         @proc_directory = PROC_DIRECTORY_MOUNTED
       end
     end

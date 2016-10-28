@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 #
-# Copyright (c) 2015 ThePlatform for Media
+# Copyright (c) 2015-16 Comcast Technology Solutions
 #
 #     Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,8 @@
 require 'linux_stats'
 
 module LinuxStats::OS::Meminfo
-  DATA_FILE = '/proc/meminfo'
+  PROC_DIRECTORY_DEFAULT = '/proc'
+  DATA_FILE = '/meminfo'
   MEM_FREE = 'MemFree'
   MEM_TOTAL = 'MemTotal'
   PAGE_CACHE = 'Cached'
@@ -31,10 +32,17 @@ module LinuxStats::OS::Meminfo
   SWAP_TOTAL = 'SwapTotal'
 
   class Reporter
+    def initialize(data_directory = PROC_DIRECTORY_DEFAULT)
+      set_data_paths data_directory
+    end
 
+    def set_data_paths(data_directory = nil)
+      @proc_file_source = "#{data_directory}#{DATA_FILE}"
+    end 
+   
     def report(data = nil)
       mem_report = {}
-      data = File.read(DATA_FILE) unless data
+      data = File.read(@proc_file_source) unless data
       data.each_line do |line|
         if line =~ /^#{MEM_TOTAL}/
           # puts line.split[1], line.split[1].to_i

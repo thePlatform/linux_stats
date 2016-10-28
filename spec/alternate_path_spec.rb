@@ -1,4 +1,3 @@
-
 # The MIT License (MIT)
 #
 # Copyright (c) 2015-16 Comcast Technology Solutions
@@ -21,7 +20,36 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-source 'https://rubygems.org'
+require 'linux_stats'
 
-# Specify your gem's dependencies in linux_stats.gemspec
-gemspec
+include LinuxStats::OS
+include LinuxStats::Process
+
+describe 'OS stats reporter class' do
+  it 'should use alternate paths when expected' do
+    use_alternate_paths = true
+    os_stats = LinuxStats::OS::Reporter.new(use_alternate_paths)
+    expect(os_stats.proc_directory).to eq '/hostproc'
+    expect(os_stats.sys_directory).to eq '/hostsys'
+  end
+
+  it 'should use primary paths when expected' do
+    os_stats = LinuxStats::OS::Reporter.new
+    expect(os_stats.proc_directory).to eq '/proc'
+    expect(os_stats.sys_directory).to eq '/sys'
+  end
+end
+
+describe 'Process stats reporter class' do
+  it 'should use alternate proc path when expected' do
+    use_alternate_paths = true
+    process_stats = LinuxStats::Process::Reporter.new(use_alternate_paths)
+    expect(process_stats.proc_directory).to eq '/hostproc'
+  end
+
+  it 'should use primary proc path when expected' do
+    process_stats = LinuxStats::Process::Reporter.new
+    expect(process_stats.proc_directory).to eq '/proc'
+  end
+
+end

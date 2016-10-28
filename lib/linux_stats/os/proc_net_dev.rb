@@ -1,7 +1,7 @@
 
 # The MIT License (MIT)
 #
-# Copyright (c) 2015 ThePlatform for Media
+# Copyright (c) 2015-16 Comcast Technology Solutions
 #
 #     Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,8 @@
 require 'linux_stats'
 
 module LinuxStats::OS::NetBandwidth
-  DATA_FILE = '/proc/net/dev'
+  PROC_DIRECTORY_DEFAULT = '/proc'
+  DATA_FILE = '/net/dev'
 
   module Column
     BYTES_RX = 0
@@ -56,8 +57,13 @@ module LinuxStats::OS::NetBandwidth
   class Reporter
     attr_accessor :current_stats, :current_timestamp
 
-    def initialize(data = nil)
+    def initialize(data = nil,data_directory = PROC_DIRECTORY_DEFAULT)
+      set_data_paths data_directory
       set_stats data
+    end
+
+    def set_data_paths(data_directory = nil)
+      @proc_file_source = "#{data_directory}#{DATA_FILE}"
     end
 
     def report(elapsed_time = nil, data = nil)
@@ -83,7 +89,7 @@ module LinuxStats::OS::NetBandwidth
     private
 
     def set_stats(bandwidth_data = nil)
-      bandwidth_data = File.read(DATA_FILE) unless bandwidth_data
+      bandwidth_data = File.read(@proc_file_source) unless bandwidth_data
       @current_timestamp = Time.now
       @current_stats = {}
       bandwidth_data.each_line do |line|

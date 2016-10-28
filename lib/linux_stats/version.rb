@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 #
-# Copyright (c) 2015 ThePlatform for Media
+# Copyright (c) 2015-16 Comcast Technology Solutions
 #
 #     Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@
 # THE SOFTWARE.
 
 module LinuxStats
-  VERSION = '0.3.14'
+  VERSION = '0.4.0'
 end
 
 module LinuxStats

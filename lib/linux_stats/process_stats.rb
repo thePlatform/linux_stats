@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 #
-# Copyright (c) 2015 ThePlatform for Media
+# Copyright (c) 2015-16 Comcast Technology Solutions
 #
 #     Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -43,10 +43,22 @@ module LinuxStats::Process
 
   class Reporter
 
-    attr_reader :report_map
+    attr_reader :proc_directory,
+                :report_map
 
-    def initialize
+    PROC_DIRECTORY_MOUNTED = '/hostproc'
+
+    def initialize(use_test_paths = false)
+      set_proc_directory use_test_paths
+      return if use_test_paths
       @report_map = {}
+    end
+
+    def set_proc_directory(use_test_paths = false)
+      @proc_directory = '/proc'
+      if Dir.exists?(PROC_DIRECTORY_MOUNTED) || use_test_paths
+        @proc_directory = PROC_DIRECTORY_MOUNTED
+      end
     end
 
     def report(friendly_name, regex)
@@ -66,7 +78,8 @@ module LinuxStats::Process
     def pids(cmd)
       # execution time: 7ms  [VERY HIGH]
       pid_list = []
-      Dir['/proc/[0-9]*/cmdline'].each do |p|
+      pid_dir_regex = "#{@proc_directory}/[0-9]*/cmdline"
+      Dir[pid_dir_regex].each do |p|
         begin
           pid_list.push(p.split('/')[PID_INDEX]) if File.read(p).match(cmd)
         rescue

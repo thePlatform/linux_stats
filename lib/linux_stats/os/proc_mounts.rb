@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 #
-# Copyright (c) 2015 ThePlatform for Media
+# Copyright (c) 2015-16 Comcast Technology Solutions
 #
 #     Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -33,9 +33,10 @@ module LinuxStats::OS::Mounts
       '^\/cgroup',
       '\['
   ]
+  PROC_DIRECTORY_DEFAULT = '/proc'
 
   module DataFile
-    MOUNTS = '/proc/mounts'
+    MOUNTS_PATH = '/mounts'
   end
 
   class Reporter
@@ -43,9 +44,14 @@ module LinuxStats::OS::Mounts
     attr_accessor :blocks_per_kilobyte,
                   :mounted_partitions
 
-    def initialize
+    def initialize(data_directory = PROC_DIRECTORY_DEFAULT)
+      set_data_paths data_directory
       @blocks_per_kilobyte = 4 # TODO: calculate from info in /proc?  Where?
       @mounted_partitions = mounts
+    end
+
+    def set_data_paths(data_directory = nil)
+      @proc_data_source = "#{data_directory}#{DataFile::MOUNTS_PATH}"
     end
 
     def report
@@ -77,7 +83,7 @@ module LinuxStats::OS::Mounts
 
     def mounts
       mount_list = []
-      IO.readlines(DataFile::MOUNTS).each do |line|
+      IO.readlines(@proc_data_source).each do |line|
         mount = line.split[1]
         next if IGNORE_PARTITIONS.include? mount
         mount_list.push line.split[1].strip

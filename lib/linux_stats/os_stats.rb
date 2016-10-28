@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 #
-# Copyright (c) 2015 ThePlatform for Media
+# Copyright (c) 2015-16 Comcast Technology Solutions
 #
 #     Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,9 @@ module LinuxStats::OS
 
   class Reporter
 
-    attr_reader :cpu_reporter,
+    attr_reader :proc_directory,
+                :sys_directory,
+                :cpu_reporter,
                 :disk_io_reporter,
                 :filedescriptor_reporter,
                 :loadavg_reporter,
@@ -37,16 +39,32 @@ module LinuxStats::OS
                 :netsocket_reporter,
                 :vmstat_reporter
 
-    def initialize
-      @cpu_reporter = CPU::Reporter.new
-      @disk_io_reporter = BlockIO::Reporter.new
-      @filedescriptor_reporter = FileDescriptor::Reporter.new
-      @loadavg_reporter = Loadavg::Reporter.new
-      @mem_reporter = Meminfo::Reporter.new
-      @mounts_reporter = Mounts::Reporter.new
-      @netbandwidth_reporter = NetBandwidth::Reporter.new
-      @netsocket_reporter = NetSocket::Reporter.new
-      @vmstat_reporter = Vmstat::Reporter.new
+    PROC_DIRECTORY_MOUNTED = '/hostproc'
+    SYS_DIRECTORY_MOUNTED = '/hostsys'
+
+    def initialize(use_test_paths = false)
+      set_data_directories use_test_paths
+      return if use_test_paths
+      @cpu_reporter = CPU::Reporter.new(nil, @proc_directory)
+      @disk_io_reporter = BlockIO::Reporter.new(nil, @proc_directory, @sys_directory)
+      @filedescriptor_reporter = FileDescriptor::Reporter.new(@proc_directory)
+      @loadavg_reporter = Loadavg::Reporter.new(@proc_directory)
+      @mem_reporter = Meminfo::Reporter.new(@proc_directory)
+      @mounts_reporter = Mounts::Reporter.new(@proc_directory)
+      @netbandwidth_reporter = NetBandwidth::Reporter.new(nil,@proc_directory)
+      @netsocket_reporter = NetSocket::Reporter.new(@proc_directory)
+      @vmstat_reporter = Vmstat::Reporter.new(nil, @proc_directory)
+    end
+
+    def set_data_directories(use_test_paths = false)
+      @proc_directory = '/proc'
+      @sys_directory = '/sys'
+      if Dir.exists?(PROC_DIRECTORY_MOUNTED) || use_test_paths
+        @proc_directory = PROC_DIRECTORY_MOUNTED
+      end
+      if Dir.exists?(SYS_DIRECTORY_MOUNTED) || use_test_paths
+        @sys_directory = SYS_DIRECTORY_MOUNTED
+      end
     end
 
     def report

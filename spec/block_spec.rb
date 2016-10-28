@@ -1,7 +1,7 @@
 
 # The MIT License (MIT)
 #
-# Copyright (c) 2015 ThePlatform for Media
+# Copyright (c) 2015-16 Comcast Technology Solutions
 #
 #     Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -73,7 +73,8 @@ METRICS_LIST = [
 describe 'watched disks' do
 
   it 'should reject block devices that have no stat file' do
-    disks = BlockIO.watched_disks DATA
+    diskreporter = BlockIO::Reporter.new
+    disks = diskreporter.watched_disks DATA
     expect(disks.include? 'sda').to be true
     expect(disks.include? 'sdx').to be false
   end

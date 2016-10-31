@@ -34,6 +34,7 @@ module LinuxStats::OS::Mounts
       '\['
   ]
   PROC_DIRECTORY_DEFAULT = '/proc'
+  CONTAINER_MOUNT_PREFIX = '/hostfs'
 
   module DataFile
     MOUNTS_PATH = '/mounts'
@@ -59,6 +60,15 @@ module LinuxStats::OS::Mounts
       storage_report = {}
       mounted_partitions.each do |partition|
         usage = partition_used(partition)
+
+        # When reporting, we want the mounts to appear as if they are from the host, not the
+        # container in which linux_stats is running.  The '//' case is a bit sloppy, but it's to
+        # handle '/' properly.
+        if @proc_data_source.include? 'hostproc'
+          partition.sub! '/hostfs','/'
+          partition.sub! '//','/'
+        end
+
         storage_report[partition] = {}
         storage_report[partition][:total_kb] = usage[0]
         storage_report[partition][:available_kb] = usage[1]
@@ -85,6 +95,13 @@ module LinuxStats::OS::Mounts
       mount_list = []
       IO.readlines(@proc_data_source).each do |line|
         mount = line.split[1]
+
+        # Inside a container, we should exclude everything not in the well-known host filesystem
+        # mount.
+        if @proc_data_source.include? 'hostproc'
+          next unless mount.include? CONTAINER_MOUNT_PREFIX
+        end
+
         next if IGNORE_PARTITIONS.include? mount
         mount_list.push line.split[1].strip
       end

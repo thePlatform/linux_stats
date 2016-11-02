@@ -34,7 +34,7 @@ module LinuxStats::OS::Mounts
       '\['
   ]
   PROC_DIRECTORY_DEFAULT = '/proc'
-  CONTAINER_MOUNT_PREFIX = '/hostfs'
+  CONTAINER_MOUNT_PREFIX = 'hostfs'
 
   module DataFile
     MOUNTS_PATH = '/mounts'
@@ -43,16 +43,23 @@ module LinuxStats::OS::Mounts
   class Reporter
 
     attr_accessor :blocks_per_kilobyte,
-                  :mounted_partitions
+                  :mounted_partitions,
+                  :container_prefix
 
-    def initialize(data_directory = PROC_DIRECTORY_DEFAULT)
+    def initialize(data_directory = PROC_DIRECTORY_DEFAULT, container_mount_name =
+        CONTAINER_MOUNT_PREFIX)
       set_data_paths data_directory
+      set_container_mount container_mount_name
       @blocks_per_kilobyte = 4 # TODO: calculate from info in /proc?  Where?
       @mounted_partitions = mounts
     end
 
     def set_data_paths(data_directory = nil)
       @proc_data_source = "#{data_directory}#{DataFile::MOUNTS_PATH}"
+    end
+
+    def set_container_mount(container_mount_name = nil)
+      @container_prefix = container_mount_name
     end
 
     def report
@@ -65,7 +72,7 @@ module LinuxStats::OS::Mounts
         # container in which linux_stats is running.  The '//' case is a bit sloppy, but it's to
         # handle '/' properly.
         if @proc_data_source.include? 'hostproc'
-          partition.sub! '/hostfs','/'
+          partition.sub! "/#{@container_prefix}",'/'
           partition.sub! '//','/'
         end
 
@@ -99,7 +106,7 @@ module LinuxStats::OS::Mounts
         # Inside a container, we should exclude everything not in the well-known host filesystem
         # mount.
         if @proc_data_source.include? 'hostproc'
-          next unless mount.include? CONTAINER_MOUNT_PREFIX
+          next unless mount.include? @container_prefix
         end
 
         next if IGNORE_PARTITIONS.include? mount

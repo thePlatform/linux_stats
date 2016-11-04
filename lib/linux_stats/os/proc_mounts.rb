@@ -65,9 +65,14 @@ module LinuxStats::OS::Mounts
     def report
       # execution time: 0.3 ms  [LOW]
       storage_report = {}
-      mounted_partitions.each do |partition|
-        usage = partition_used(partition)
 
+      mounted_partitions.each do |partition|
+        if (@proc_data_source.include? 'hostproc') && (!partition.include? @container_prefix)
+          partition.sub! /^\//,"/#{@container_prefix}/"
+          partition.sub! '//','/'
+        end
+
+        usage = partition_used(partition)
         # When reporting, we want the mounts to appear as if they are from the host, not the
         # container in which linux_stats is running.  The '//' case is a bit sloppy, but it's to
         # handle '/' properly.

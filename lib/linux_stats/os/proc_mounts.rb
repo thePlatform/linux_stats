@@ -49,13 +49,16 @@ module LinuxStats::OS::Mounts
 
     attr_accessor :blocks_per_kilobyte,
                   :mounted_partitions,
-                  :container_prefix
+                  :container_prefix,
+                  :mount_list_size
 
     def initialize(data_directory = PROC_DIRECTORY_DEFAULT, container_mount_name =
-        CONTAINER_MOUNT_PREFIX)
+        CONTAINER_MOUNT_PREFIX, data = nil, test_mode = false)
       set_data_paths data_directory
       set_container_mount container_mount_name
       @blocks_per_kilobyte = 4 # TODO: calculate from info in /proc?  Where?
+      @test_mode = test_mode
+      return if @test_mode
       @mounted_partitions = mounts
     end
 
@@ -76,8 +79,7 @@ module LinuxStats::OS::Mounts
         # process using this as a library), we need to manually re-build the host path when
         # operating against data using when he are operating in the defined container mode.
         if (@proc_data_source.include? 'hostproc') && (!partition.include? @container_prefix)
-          partition.sub! /^\//,"/#{@container_prefix}/"
-          partition.sub! '//','/'
+          add_container_directory partition
         end
 
         usage = partition_used(partition)
@@ -85,8 +87,7 @@ module LinuxStats::OS::Mounts
         # container in which linux_stats is running.  The '//' case is a bit sloppy, but it's to
         # handle '/' properly.
         if @proc_data_source.include? 'hostproc'
-          partition.sub! "/#{@container_prefix}",'/'
-          partition.sub! '//','/'
+          strip_container_directory partition
         end
 
         storage_report[partition] = {}
@@ -99,36 +100,67 @@ module LinuxStats::OS::Mounts
       storage_report
     end
 
+    def strip_container_directory(mount_path = nil)
+      mount_path.sub! "/#{@container_prefix}",'/'
+      mount_path.sub! '//','/'
+    end
+
+    def add_container_directory(mount_path = nil)
+      mount_path.sub! /^\//,"/#{@container_prefix}/"
+      mount_path.sub! '//','/'
+    end
+
     # see https://www.ruby-forum.com/topic/4416522
     # returns: array of partition use: [
     #   <used kilobytes>
     #   <max kilobytes>
     # ]
     def partition_used(partition)
+      # Return magic number if in test_mode to prevent syscall
+      return '128' if @test_mode
       b = ' ' * 128
       syscall(137, partition, b)
       a = b.unpack('QQQQQ')
       [a[2] * blocks_per_kilobyte, a[4] * blocks_per_kilobyte]
     end
 
-    def mounts
+    def mounts(data = nil)
       mount_list = []
-      IO.readlines(@proc_data_source).each do |line|
-        mount = line.split[1]
+      unless data
+        IO.readlines(@proc_data_source).each do |line|
+          mount = line.split[1]
 
-        # Inside a container, we should exclude everything not in the well-known host filesystem
-        # mount.
-        if @proc_data_source.include? 'hostproc'
-          next unless mount.include? @container_prefix
+          # Inside a container, we should exclude everything not in the well-known host filesystem
+          # mount.
+          if @proc_data_source.include? 'hostproc'
+            next unless mount.include? @container_prefix
+          end
+
+          next if IGNORE_PARTITIONS.include? mount
+          mount_list.push line.split[1].strip
         end
+      else
+        StringIO.readlines(data).each do |line|
+          mount = line.split[1]
 
-        next if IGNORE_PARTITIONS.include? mount
-        mount_list.push line.split[1].strip
+          # Inside a container, we should exclude everything not in the well-known host filesystem
+          # mount.
+          if @proc_data_source.include? 'hostproc'
+            next unless mount.include? @container_prefix
+          end
+
+          next if IGNORE_PARTITIONS.include? mount
+          mount_list.push line.split[1].strip
+        end
       end
-      IGNORE_PARTITIONS.each do |partition|
-        mount_list.reject! { |x| x =~ /#{partition}/ }
-      end
-      mount_list
+        IGNORE_PARTITIONS.each do |partition|
+          mount_list.reject! { |x| x =~ /#{partition}/ }
+        end
+        mount_list
+    end
+
+    def verify_mount_count(mount_list = nil)
+      @mount_list_size = mount_list.size
     end
 
   end

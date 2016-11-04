@@ -27,10 +27,15 @@ require 'linux_stats'
 module LinuxStats::OS::Mounts
   IGNORE_PARTITIONS = [
       'docker',
+      '\/dev\/pts',
       '^\/proc',
       '^\/run',
       '^\/sys',
       '^\/cgroup',
+      '^\/hostfs\/proc',
+      '^\/hostfs\/run',
+      '^\/hostfs\/sys',
+      '^\/hostfs\/cgroup',
       '\['
   ]
   PROC_DIRECTORY_DEFAULT = '/proc'
@@ -67,6 +72,9 @@ module LinuxStats::OS::Mounts
       storage_report = {}
 
       mounted_partitions.each do |partition|
+        # Because of the way this runs on successive iterations (via the binary or within a Ruby
+        # process using this as a library), we need to manually re-build the host path when
+        # operating against data using when he are operating in the defined container mode.
         if (@proc_data_source.include? 'hostproc') && (!partition.include? @container_prefix)
           partition.sub! /^\//,"/#{@container_prefix}/"
           partition.sub! '//','/'

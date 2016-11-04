@@ -159,8 +159,8 @@ module LinuxStats::OS::Mounts
         mount_list
     end
 
-    def verify_mount_count(mount_list = nil)
-      @mount_list_size = mount_list.size
+    def verify_mount_count
+      @mount_list_size = @mounted_partitions
     end
 
   end

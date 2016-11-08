@@ -39,6 +39,7 @@ module LinuxStats::OS::Mounts
       '\['
   ]
   PROC_DIRECTORY_DEFAULT = '/proc'
+  PROC_DIRECTORY_CONTAINER = '/hostproc'
   CONTAINER_MOUNT_PREFIX = 'hostfs'
 
   module DataFile
@@ -80,7 +81,7 @@ module LinuxStats::OS::Mounts
         # Because of the way this runs on successive iterations (via the binary or within a Ruby
         # process using this as a library), we need to manually re-build the host path when
         # operating against data using when he are operating in the defined container mode.
-        if (@proc_data_source.include? 'hostproc') && (!partition.include? @container_prefix)
+        if (@proc_data_source.include? PROC_DIRECTORY_CONTAINER) && (!partition.include? @container_prefix)
           add_container_directory partition
         end
 
@@ -88,7 +89,7 @@ module LinuxStats::OS::Mounts
         # When reporting, we want the mounts to appear as if they are from the host, not the
         # container in which linux_stats is running.  The '//' case is a bit sloppy, but it's to
         # handle '/' properly.
-        if @proc_data_source.include? 'hostproc'
+        if @proc_data_source.include? PROC_DIRECTORY_CONTAINER
           strip_container_directory partition
         end
 
@@ -134,7 +135,7 @@ module LinuxStats::OS::Mounts
 
           # Inside a container, we should exclude everything not in the well-known host filesystem
           # mount.
-          if @proc_data_source.include? 'hostproc'
+          if @proc_data_source.include? PROC_DIRECTORY_CONTAINER
             next unless mount.include? @container_prefix
           end
 
@@ -148,7 +149,7 @@ module LinuxStats::OS::Mounts
 
           # Inside a container, we should exclude everything not in the well-known host filesystem
           # mount.
-          if @proc_data_source.include? 'hostproc'
+          if @proc_data_source.include? PROC_DIRECTORY_CONTAINER
             next unless mount.include? @container_prefix
           end
 
@@ -162,10 +163,7 @@ module LinuxStats::OS::Mounts
         mount_list
     end
 
-    def verify_storage_report
-      report
-    end
-
+    # Test hook used for mount list parsing tests
     def verify_mount_count
       @mounted_partitions.length
     end

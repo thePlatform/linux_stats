@@ -130,37 +130,27 @@ module LinuxStats::OS::Mounts
     def mounts(data = nil)
       mount_list = []
       unless data
-        IO.readlines(@proc_data_source).each do |line|
-          mount = line.split[1]
-
-          # Inside a container, we should exclude everything not in the well-known host filesystem
-          # mount.
-          if @proc_data_source.include? PROC_DIRECTORY_CONTAINER
-            next unless mount.include? @container_prefix
-          end
-
-          next if IGNORE_PARTITIONS.include? mount
-          mount_list.push line.split[1].strip
-        end
+        source_list = IO.readlines(@proc_data_source)
       else
-        mount_test_data = StringIO.new(data)
-        mount_test_data.readlines.each do |line|
-          mount = line.split[1]
-
-          # Inside a container, we should exclude everything not in the well-known host filesystem
-          # mount.
-          if @proc_data_source.include? PROC_DIRECTORY_CONTAINER
-            next unless mount.include? @container_prefix
-          end
-
-          next if IGNORE_PARTITIONS.include? mount
-          mount_list.push line.split[1].strip
-        end
+        source_list = StringIO.new(data).readlines
       end
-        IGNORE_PARTITIONS.each do |partition|
-          mount_list.reject! { |x| x =~ /#{partition}/ }
+
+      source_list.each do |line|
+        mount = line.split[1]
+
+        # Inside a container, we should exclude everything not in the well-known host filesystem
+        # mount.
+        if @proc_data_source.include? PROC_DIRECTORY_CONTAINER
+          next unless mount.include? @container_prefix
         end
-        mount_list
+
+        next if IGNORE_PARTITIONS.include? mount
+        mount_list.push line.split[1].strip
+      end
+      IGNORE_PARTITIONS.each do |partition|
+        mount_list.reject! { |x| x =~ /#{partition}/ }
+      end
+      mount_list
     end
 
     # Test hook used for mount list parsing tests

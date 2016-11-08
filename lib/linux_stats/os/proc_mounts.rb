@@ -27,13 +27,19 @@ require 'linux_stats'
 module LinuxStats::OS::Mounts
   IGNORE_PARTITIONS = [
       'docker',
+      '\/dev\/pts',
       '^\/proc',
       '^\/run',
       '^\/sys',
       '^\/cgroup',
+      '^\/hostfs\/proc',
+      '^\/hostfs\/run',
+      '^\/hostfs\/sys',
+      '^\/hostfs\/cgroup',
       '\['
   ]
   PROC_DIRECTORY_DEFAULT = '/proc'
+  CONTAINER_MOUNT_PREFIX = 'hostfs'
 
   module DataFile
     MOUNTS_PATH = '/mounts'
@@ -42,11 +48,17 @@ module LinuxStats::OS::Mounts
   class Reporter
 
     attr_accessor :blocks_per_kilobyte,
-                  :mounted_partitions
+                  :mounted_partitions,
+                  :container_prefix,
+                  :mount_list_size
 
-    def initialize(data_directory = PROC_DIRECTORY_DEFAULT)
+    def initialize(data_directory = PROC_DIRECTORY_DEFAULT, container_mount_name =
+        CONTAINER_MOUNT_PREFIX, data = nil, test_mode = false)
       set_data_paths data_directory
+      set_container_mount container_mount_name
       @blocks_per_kilobyte = 4 # TODO: calculate from info in /proc?  Where?
+      @test_mode = test_mode
+      return if @test_mode
       @mounted_partitions = mounts
     end
 
@@ -54,11 +66,30 @@ module LinuxStats::OS::Mounts
       @proc_data_source = "#{data_directory}#{DataFile::MOUNTS_PATH}"
     end
 
+    def set_container_mount(container_mount_name = nil)
+      @container_prefix = container_mount_name
+    end
+
     def report
       # execution time: 0.3 ms  [LOW]
       storage_report = {}
+
       mounted_partitions.each do |partition|
+        # Because of the way this runs on successive iterations (via the binary or within a Ruby
+        # process using this as a library), we need to manually re-build the host path when
+        # operating against data using when he are operating in the defined container mode.
+        if (@proc_data_source.include? 'hostproc') && (!partition.include? @container_prefix)
+          add_container_directory partition
+        end
+
         usage = partition_used(partition)
+        # When reporting, we want the mounts to appear as if they are from the host, not the
+        # container in which linux_stats is running.  The '//' case is a bit sloppy, but it's to
+        # handle '/' properly.
+        if @proc_data_source.include? 'hostproc'
+          strip_container_directory partition
+        end
+
         storage_report[partition] = {}
         storage_report[partition][:total_kb] = usage[0]
         storage_report[partition][:available_kb] = usage[1]
@@ -69,29 +100,67 @@ module LinuxStats::OS::Mounts
       storage_report
     end
 
+    def strip_container_directory(mount_path = nil)
+      mount_path.sub! "/#{@container_prefix}",'/'
+      mount_path.sub! '//','/'
+    end
+
+    def add_container_directory(mount_path = nil)
+      mount_path.sub! /^\//,"/#{@container_prefix}/"
+      mount_path.sub! '//','/'
+    end
+
     # see https://www.ruby-forum.com/topic/4416522
     # returns: array of partition use: [
     #   <used kilobytes>
     #   <max kilobytes>
     # ]
     def partition_used(partition)
+      # Return magic number if in test_mode to prevent syscall
+      return '128' if @test_mode
       b = ' ' * 128
       syscall(137, partition, b)
       a = b.unpack('QQQQQ')
       [a[2] * blocks_per_kilobyte, a[4] * blocks_per_kilobyte]
     end
 
-    def mounts
+    def mounts(data = nil)
       mount_list = []
-      IO.readlines(@proc_data_source).each do |line|
-        mount = line.split[1]
-        next if IGNORE_PARTITIONS.include? mount
-        mount_list.push line.split[1].strip
+      unless data
+        IO.readlines(@proc_data_source).each do |line|
+          mount = line.split[1]
+
+          # Inside a container, we should exclude everything not in the well-known host filesystem
+          # mount.
+          if @proc_data_source.include? 'hostproc'
+            next unless mount.include? @container_prefix
+          end
+
+          next if IGNORE_PARTITIONS.include? mount
+          mount_list.push line.split[1].strip
+        end
+      else
+        StringIO.readlines(data).each do |line|
+          mount = line.split[1]
+
+          # Inside a container, we should exclude everything not in the well-known host filesystem
+          # mount.
+          if @proc_data_source.include? 'hostproc'
+            next unless mount.include? @container_prefix
+          end
+
+          next if IGNORE_PARTITIONS.include? mount
+          mount_list.push line.split[1].strip
+        end
       end
-      IGNORE_PARTITIONS.each do |partition|
-        mount_list.reject! { |x| x =~ /#{partition}/ }
-      end
-      mount_list
+        IGNORE_PARTITIONS.each do |partition|
+          mount_list.reject! { |x| x =~ /#{partition}/ }
+        end
+        mount_list
+    end
+
+    def verify_mount_count
+      @mount_list_size = @mounted_partitions
     end
 
   end

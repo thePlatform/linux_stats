@@ -52,8 +52,10 @@ module LinuxStats::OS::Mounts
                   :mounted_partitions,
                   :container_prefix
 
-    def initialize(data_directory = PROC_DIRECTORY_DEFAULT, container_mount_name =
-        CONTAINER_MOUNT_PREFIX, data = nil, test_mode = false)
+    def initialize(data_directory = PROC_DIRECTORY_DEFAULT,
+                   container_mount_name = CONTAINER_MOUNT_PREFIX,
+                   data = nil,
+                   test_mode = false)
       set_data_paths data_directory
       set_container_mount container_mount_name
       @blocks_per_kilobyte = 4 # TODO: calculate from info in /proc?  Where?
@@ -80,7 +82,7 @@ module LinuxStats::OS::Mounts
       mounted_partitions.each do |partition|
         # Because of the way this runs on successive iterations (via the binary or within a Ruby
         # process using this as a library), we need to manually re-build the host path when
-        # operating against data using when he are operating in the defined container mode.
+        # operating against data using when we are operating in the defined container mode.
         if (@proc_data_source.include? PROC_DIRECTORY_CONTAINER) && (!partition.include? @container_prefix)
           add_container_directory partition
         end

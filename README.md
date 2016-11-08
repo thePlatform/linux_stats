@@ -68,6 +68,14 @@ within a Docker container.  This is accomplished by mounting the host's /proc an
 /hostproc and /hostsys within the container, as well as mounting the host's root filesystem ('/') to 
 /hostfs within the container.
 
+This means that your Docker run command should include the following:
+    
+    docker run your-container-name:container-version \ 
+        --volume /:/hostfs:ro \
+        --volume /proc:/hostproc:ro \
+        --volume /sys:/hostsys:ro \
+        other-flags-and-settings
+
 ### Note
 Mac OS X is not supported.  linux_stats gets its data by inspecting the
 /proc filesystem, which does not exist on macs.

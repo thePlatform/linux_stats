@@ -25,7 +25,7 @@ require 'linux_stats'
 
 include LinuxStats::OS
 
-# Using rules from IGNORE_LIST in Mounts, there are 9 mounts in the following list that are to not be ignored. 
+# Using rules from IGNORE_LIST in Mounts, there are 9 mounts in the following list that are to not be ignored.
 CONTAINER_MOUNT_COUNT = 9
 CONTAINER_MOUNT_DATA = 'rootfs / rootfs rw 0 0
 /dev/mapper/docker-253:4-40803-7fab58c8f0098a1976376c5271ed6540d2edeb636d831db1e6bbe4bfcc266717 / ext4 rw,relatime,barrier=1,stripe=16,data=ordered,discard 0 0
@@ -70,7 +70,7 @@ sysfs /hostsys sysfs ro,relatime 0 0
 /dev/mapper/logdisk-logvol /var/log/app ext3 rw,relatime,errors=continue,user_xattr,acl,barrier=1,data=ordered 0 0
 /dev/mapper/sysdisk-varvol /etc/resolv.conf ext3 rw,relatime,errors=continue,user_xattr,acl,barrier=1,data=ordered 0 0'
 
-# Using rules from IGNORE_LIST in Mounts, there are 10 mounts in the following list that are to not be ignored. 
+# Using rules from IGNORE_LIST in Mounts, there are 10 mounts in the following list that are to not be ignored.
 RAW_HOST_MOUNT_COUNT = 10
 RAW_HOST_MOUNT_DATA = 'rootfs / rootfs rw 0 0
 proc /proc proc rw,relatime 0 0
@@ -100,7 +100,6 @@ PROC_DIRECTORY_MAIN = '/proc'
 PROC_DIRECTORY_CONTAINER = '/hostproc'
 CONTAINER_MOUNT_PREFIX = 'hostfs'
 
-
 describe 'Partition Report' do
   it 'SENSU-261 -- it should calculate correct disk used percent' do
     reporter = Mounts::Reporter.new
@@ -123,39 +122,39 @@ end
 
 describe 'alternate paths tests' do
   it 'should produce a list with the right number of mounts when not in a container' do
-    reporter = Mounts::Reporter.new(PROC_DIRECTORY_MAIN, CONTAINER_MOUNT_PREFIX, RAW_HOST_MOUNT_DATA,
-                                    test_mode = true)
-     # A bit of a magic number, but 10 is correct after processing IGNORE_LIST, etc.
+    reporter = Mounts::Reporter.new(PROC_DIRECTORY_MAIN, CONTAINER_MOUNT_PREFIX,
+                                    RAW_HOST_MOUNT_DATA, test_mode = true)
+    # A bit of a magic number, but 10 is correct after processing IGNORE_LIST, etc.
     expect(reporter.verify_mount_count).to be RAW_HOST_MOUNT_COUNT
   end
-  
+
   it 'should produce a list with the right number of mounts when in a container' do
-    reporter = Mounts::Reporter.new(PROC_DIRECTORY_CONTAINER, CONTAINER_MOUNT_PREFIX, CONTAINER_MOUNT_DATA,
-                                    test_mode = true)
-     # A bit of a magic number, but 10 is correct after processing IGNORE_LIST, etc.
+    reporter = Mounts::Reporter.new(PROC_DIRECTORY_CONTAINER, CONTAINER_MOUNT_PREFIX,
+                                    CONTAINER_MOUNT_DATA, test_mode = true)
+    # A bit of a magic number, but 10 is correct after processing IGNORE_LIST, etc.
     expect(reporter.verify_mount_count).to be CONTAINER_MOUNT_COUNT
   end
- 
+
   it 'should produce a list zero with zero mounts when in a container and hostfs not mounted' do
-    reporter = Mounts::Reporter.new(PROC_DIRECTORY_CONTAINER, CONTAINER_MOUNT_PREFIX, RAW_HOST_MOUNT_DATA,
-                                    test_mode = true)
-     # A bit of a magic number, but 10 is correct after processing IGNORE_LIST, etc.
+    reporter = Mounts::Reporter.new(PROC_DIRECTORY_CONTAINER, CONTAINER_MOUNT_PREFIX,
+                                    RAW_HOST_MOUNT_DATA, test_mode = true)
+    # A bit of a magic number, but 10 is correct after processing IGNORE_LIST, etc.
     expect(reporter.verify_mount_count).to be 0
   end
 
-  # These two tests pic the same mount and test that, internally, the path is relative to /hostfs, but
-  # when reported, it is relative to root (/)
-  it 'should produce a list of mounts relative to /hostfs rather than / (root)  within a container' do
-    reporter = Mounts::Reporter.new(PROC_DIRECTORY_CONTAINER, CONTAINER_MOUNT_PREFIX, CONTAINER_MOUNT_DATA,
-                                    test_mode = true)
-     # A bit of a magic number, but 10 is correct after processing IGNORE_LIST, etc.
+  # These two tests pic the same mount and test that, internally, the path is relative to /hostfs,
+  # but when reported, it is relative to root (/)
+  it 'should produce a list of mounts relative to /hostfs rather than / within a container' do
+    reporter = Mounts::Reporter.new(PROC_DIRECTORY_CONTAINER, CONTAINER_MOUNT_PREFIX,
+                                    CONTAINER_MOUNT_DATA, test_mode = true)
+    # A bit of a magic number, but 10 is correct after processing IGNORE_LIST, etc.
     expect(reporter.mounted_partitions.include? '/hostfs/var').to be true
     expect(reporter.mounted_partitions.include? '/var').to be false
   end
-  
-   it 'should produce a report of mounts relative to root (/) rather than /hostfs within a container' do
-    reporter = Mounts::Reporter.new(PROC_DIRECTORY_CONTAINER, CONTAINER_MOUNT_PREFIX, CONTAINER_MOUNT_DATA,
-                                    test_mode = true)
+
+  it 'should produce a report of mounts relative to / rather than /hostfs within a container' do
+    reporter = Mounts::Reporter.new(PROC_DIRECTORY_CONTAINER, CONTAINER_MOUNT_PREFIX,
+                                    CONTAINER_MOUNT_DATA, test_mode = true)
     test_report = reporter.report
     expect(test_report.key? '/var').to be true
     expect(test_report.key? '/hostfs/var').to be false

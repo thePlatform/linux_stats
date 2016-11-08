@@ -49,8 +49,7 @@ module LinuxStats::OS::Mounts
 
     attr_accessor :blocks_per_kilobyte,
                   :mounted_partitions,
-                  :container_prefix,
-                  :mount_list_size
+                  :container_prefix
 
     def initialize(data_directory = PROC_DIRECTORY_DEFAULT, container_mount_name =
         CONTAINER_MOUNT_PREFIX, data = nil, test_mode = false)
@@ -58,8 +57,11 @@ module LinuxStats::OS::Mounts
       set_container_mount container_mount_name
       @blocks_per_kilobyte = 4 # TODO: calculate from info in /proc?  Where?
       @test_mode = test_mode
-      return if @test_mode
-      @mounted_partitions = mounts
+      if data && @test_mode
+        @mounted_partitions = mounts(data)
+      else
+        @mounted_partitions = mounts
+      end
     end
 
     def set_data_paths(data_directory = nil)
@@ -140,7 +142,8 @@ module LinuxStats::OS::Mounts
           mount_list.push line.split[1].strip
         end
       else
-        StringIO.readlines(data).each do |line|
+        mount_test_data = StringIO.new(data)
+        mount_test_data.readlines.each do |line|
           mount = line.split[1]
 
           # Inside a container, we should exclude everything not in the well-known host filesystem
@@ -159,8 +162,12 @@ module LinuxStats::OS::Mounts
         mount_list
     end
 
+    def verify_storage_report
+      report
+    end
+
     def verify_mount_count
-      @mount_list_size = @mounted_partitions
+      mount_list_size = @mounted_partitions.length
     end
 
   end

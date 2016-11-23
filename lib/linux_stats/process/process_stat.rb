@@ -24,7 +24,11 @@ require 'linux_stats'
 
 module LinuxStats::Process::PidStat
 
-  CPU_COUNT = `grep processor /proc/cpuinfo | wc -l`.to_f
+  # todo -- remove
+  # CPU_COUNT_BASE = `grep processor /proc/cpuinfo | wc -l`.to_f
+  # CPU_COUNT_CONTAINERIZED = `grep processor /hostproc/cpuinfo | wc -l`.to_f
+  CONTAINER_PROC_MOUNT = 'hostproc'
+  $proc_directory = '/proc'
 
   module Column
     CHILD_GUEST = 43
@@ -98,7 +102,8 @@ module LinuxStats::Process::PidStat
     private
 
     def read_boot_time
-      File.readlines('/proc/stat').each do |line|
+      puts "$proc_dir is #{$proc_directory}"
+      File.readlines("#{$proc_directory}/stat").each do |line|
         return line.split[1].to_i if line =~ /^btime/
       end
     end
@@ -125,7 +130,7 @@ module LinuxStats::Process::PidStat
 
     def initialize(pid, data = nil)
       # puts "data nil? #{data.nil?}"
-      data = File.read("/proc/#{pid}/stat") unless data
+      data = File.read("#{$proc_directory}/#{pid}/stat") unless data
       # puts "Data: #{data}"
       words = data.split
       @cmd = words[Column::COMMAND].tr(')(', '')
@@ -148,9 +153,18 @@ module LinuxStats::Process::PidStat
 
   # One reporter instance will be assigned
   class Reporter
-    attr_accessor :pid_stats_map
+    attr_accessor :pid_stats_map,
+                  :cpu_count,
+                  :proc_directory
 
-    def initialize
+    def initialize(proc_directory = $proc_directory)
+      $proc_directory = proc_directory
+      @proc_directory = $proc_directory
+      if $proc_directory.include?(CONTAINER_PROC_MOUNT)
+        @cpu_count = `grep processor /hostproc/cpuinfo | wc -l`.to_f
+      else
+        @cpu_count = `grep processor /proc/cpuinfo | wc -l`.to_f
+      end
       @pid_stats_map = {}
     end
 
@@ -164,7 +178,7 @@ module LinuxStats::Process::PidStat
       cpu_pct = cpu_data[:self][:user_pct] +
           cpu_data[:self][:kern_pct] +
           cpu_data[:self][:guest_pct]
-      normalized_cpu_pct = cpu_pct / CPU_COUNT
+      normalized_cpu_pct = cpu_pct / @cpu_count
       normalized_cpu_pct = 100.0 if normalized_cpu_pct > 100.0
       normalized_cpu_pct
     end

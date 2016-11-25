@@ -24,11 +24,13 @@ require 'linux_stats'
 
 module LinuxStats::Process::PidStat
 
-  # todo -- remove
-  # CPU_COUNT_BASE = `grep processor /proc/cpuinfo | wc -l`.to_f
-  # CPU_COUNT_CONTAINERIZED = `grep processor /hostproc/cpuinfo | wc -l`.to_f
-  CONTAINER_PROC_MOUNT = 'hostproc'
-  $proc_directory = '/proc'
+  PROC_MOUNT_CONTAINER = '/hostproc'
+  PROC_MOUNT_BASE = '/proc'
+
+  # TODO -- Remove the need for this global.  I don't like globals but I don't want to redo the
+  # TODO -- "am I in a container?" logic here, nor pass around proc_directory from all possible
+  # TODO -- locations.
+  $proc_directory = PROC_MOUNT_BASE
 
   module Column
     CHILD_GUEST = 43
@@ -158,14 +160,21 @@ module LinuxStats::Process::PidStat
                   :proc_directory
 
     def initialize(proc_directory = $proc_directory)
-      $proc_directory = proc_directory
-      @proc_directory = $proc_directory
-      if $proc_directory.include?(CONTAINER_PROC_MOUNT)
+      set_proc_directory proc_directory
+      if $proc_directory.include?(PROC_MOUNT_CONTAINER)
         @cpu_count = `grep processor /hostproc/cpuinfo | wc -l`.to_f
       else
         @cpu_count = `grep processor /proc/cpuinfo | wc -l`.to_f
       end
       @pid_stats_map = {}
+    end
+
+    def set_proc_directory(proc_directory = PROC_MOUNT_BASE)
+      $proc_directory = proc_directory
+    end
+
+    def get_proc_directory
+      return $proc_directory
     end
 
     # gather performance data for a single PID

@@ -62,7 +62,7 @@ module LinuxStats::Process
     end
 
     def report(friendly_name, regex)
-      report_map[regex] = PidStat::Reporter.new unless report_map.key? regex
+      report_map[regex] = PidStat::Reporter.new(@proc_directory) unless report_map.key? regex
       ret = {}
       reporter = report_map[regex]
       process_pids = pids regex

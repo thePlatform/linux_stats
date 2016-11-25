@@ -51,5 +51,12 @@ describe 'Process stats reporter class' do
     process_stats = LinuxStats::Process::Reporter.new
     expect(process_stats.proc_directory).to eq '/proc'
   end
-
 end
+
+describe 'ProcessStats::PidStat module' do
+  it 'should use passed-in proc path when expected within PidStat Reporter' do
+    pid_stats = LinuxStats::Process::PidStat::Reporter.new('/testproc')
+    expect(pid_stats.get_proc_directory).to eq '/testproc'
+  end
+end
+

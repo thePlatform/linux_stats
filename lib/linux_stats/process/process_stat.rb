@@ -24,7 +24,13 @@ require 'linux_stats'
 
 module LinuxStats::Process::PidStat
 
-  CPU_COUNT = `grep processor /proc/cpuinfo | wc -l`.to_f
+  PROC_MOUNT_CONTAINER = '/hostproc'
+  PROC_MOUNT_BASE = '/proc'
+
+  # TODO -- Remove the need for this global.  I don't like globals but I don't want to redo the
+  # TODO -- "am I in a container?" logic here, nor pass around proc_directory from all possible
+  # TODO -- locations.
+  $proc_directory = PROC_MOUNT_BASE
 
   module Column
     CHILD_GUEST = 43
@@ -98,7 +104,8 @@ module LinuxStats::Process::PidStat
     private
 
     def read_boot_time
-      File.readlines('/proc/stat').each do |line|
+      puts "$proc_dir is #{$proc_directory}"
+      File.readlines("#{$proc_directory}/stat").each do |line|
         return line.split[1].to_i if line =~ /^btime/
       end
     end
@@ -125,7 +132,7 @@ module LinuxStats::Process::PidStat
 
     def initialize(pid, data = nil)
       # puts "data nil? #{data.nil?}"
-      data = File.read("/proc/#{pid}/stat") unless data
+      data = File.read("#{$proc_directory}/#{pid}/stat") unless data
       # puts "Data: #{data}"
       words = data.split
       @cmd = words[Column::COMMAND].tr(')(', '')
@@ -148,10 +155,26 @@ module LinuxStats::Process::PidStat
 
   # One reporter instance will be assigned
   class Reporter
-    attr_accessor :pid_stats_map
+    attr_accessor :pid_stats_map,
+                  :cpu_count,
+                  :proc_directory
 
-    def initialize
+    def initialize(proc_directory = $proc_directory)
+      set_proc_directory proc_directory
+      if $proc_directory.include?(PROC_MOUNT_CONTAINER)
+        @cpu_count = `grep processor /hostproc/cpuinfo | wc -l`.to_f
+      else
+        @cpu_count = `grep processor /proc/cpuinfo | wc -l`.to_f
+      end
       @pid_stats_map = {}
+    end
+
+    def set_proc_directory(proc_directory = PROC_MOUNT_BASE)
+      $proc_directory = proc_directory
+    end
+
+    def get_proc_directory
+      return $proc_directory
     end
 
     # gather performance data for a single PID
@@ -164,7 +187,7 @@ module LinuxStats::Process::PidStat
       cpu_pct = cpu_data[:self][:user_pct] +
           cpu_data[:self][:kern_pct] +
           cpu_data[:self][:guest_pct]
-      normalized_cpu_pct = cpu_pct / CPU_COUNT
+      normalized_cpu_pct = cpu_pct / @cpu_count
       normalized_cpu_pct = 100.0 if normalized_cpu_pct > 100.0
       normalized_cpu_pct
     end
